@@ -7,10 +7,7 @@ export class SDebugRenderer extends AbstractRenderer {
   }
 
   draw() {
-    const {
-      display: { ctx },
-    } = this.ecs;
-
+    const ctx = this.ecs.display.ctx;
     ctx.fillStyle = "lime";
     const fontSize = 10;
     const lineHeight = fontSize * 1.5;
@@ -39,6 +36,19 @@ export class SDebugRenderer extends AbstractRenderer {
           );
         write("");
       }
+    }
+
+    for (const [entity, pointer] of this.ecs.pointers) {
+      const { x, y, w, h } = this.ecs.transforms.get(entity)!;
+      ctx.strokeStyle = pointer.pressed ? "red" : "lime";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, y - 10);
+      ctx.lineTo(x, y + 10);
+      ctx.moveTo(x - 10, y);
+      ctx.lineTo(x + 10, y);
+      ctx.rect(x, y, w, h);
+      ctx.stroke();
     }
   }
 }
