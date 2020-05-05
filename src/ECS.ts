@@ -1,5 +1,6 @@
 import { CDevice } from "./CDevice";
 import { CPointer } from "./CPointer";
+import { CPointerTarget } from "./CPointerTarget";
 import { CPort } from "./CPort";
 import { CTransform } from "./CTransform";
 import { CWire } from "./CWire";
@@ -26,6 +27,7 @@ export class ECS {
   ports = new EntityComponentMap<CPort>();
   wires = new EntityComponentMap<CWire>();
   pointers = new EntityComponentMap<CPointer>();
+  pointerTargets = new EntityComponentMap<CPointerTarget>();
 
   prefabs = new SPrefabs(this);
   audio = new SAudio(this);

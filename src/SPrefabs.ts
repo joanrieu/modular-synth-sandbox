@@ -1,3 +1,5 @@
+import { CDevice } from "./CDevice";
+import { CPort } from "./CPort";
 import { ECS, Entity } from "./ECS";
 
 export class SPrefabs {
@@ -10,39 +12,19 @@ export class SPrefabs {
   }
 
   createMaster({ x, y }: { x: number; y: number }) {
-    const {
-      ecs: { devices, transforms, ports, createEntity, audio },
-      getContentBox,
-    } = this;
-    const device = createEntity("master");
-    const speakers = createEntity("master-speakers");
-
-    transforms.set(device, {
+    const device = this.createDevice({
+      name: "Master",
       x,
       y,
-      get w() {
-        return getContentBox(device, "w");
-      },
-      get h() {
-        return getContentBox(device, "h");
-      },
-    });
-    devices.set(device, {
-      name: "Master",
-      ports: [speakers],
     });
 
-    transforms.set(speakers, {
-      parent: device,
+    const speakers = this.createPort({
+      device,
+      name: "spk",
+      node: this.ecs.audio.ctx.destination,
+      input: 0,
       x: 20,
       y: 40,
-      w: 32,
-      h: 32,
-    });
-    ports.set(speakers, {
-      name: "spk",
-      node: audio.ctx.destination,
-      input: 0,
     });
 
     return [device, speakers];
@@ -57,52 +39,74 @@ export class SPrefabs {
     y: number;
     options?: OscillatorOptions;
   }) {
-    const {
-      ecs: {
-        createEntity,
-        transforms,
-        devices,
-        ports,
-        audio: { ctx },
-      },
-      getContentBox,
-    } = this;
-
-    const device = createEntity("osc");
-    const port = createEntity(device.description + "-out");
-
-    const node = new OscillatorNode(ctx, options);
-    node.start();
-
-    transforms.set(device, {
+    const device = this.createDevice({
+      name: "Osc",
       x,
       y,
-      get w() {
-        return getContentBox(device, "w");
-      },
-      get h() {
-        return getContentBox(device, "h");
-      },
-    });
-    devices.set(device, {
-      name: "Osc",
-      ports: [port],
     });
 
-    transforms.set(port, {
-      parent: device,
-      x: 20,
-      y: 40,
-      w: 32,
-      h: 32,
-    });
-    ports.set(port, {
+    const node = new OscillatorNode(this.ecs.audio.ctx, options);
+    node.start();
+
+    const port = this.createPort({
       name: "out",
+      device,
       node,
       output: 0,
+      x: 20,
+      y: 40,
     });
 
     return [device, port];
+  }
+
+  createDevice({
+    name,
+    x,
+    y,
+    ...device
+  }: { name: string; x: number; y: number } & Omit<CDevice, "ports">) {
+    const getContentBox = this.getContentBox;
+    const entity = this.ecs.createEntity(name.toLowerCase());
+    this.ecs.devices.set(entity, { name, ports: [], ...device });
+    this.ecs.transforms.set(entity, {
+      x,
+      y,
+      get w() {
+        return getContentBox(entity, "w");
+      },
+      get h() {
+        return getContentBox(entity, "h");
+      },
+    });
+    this.setPointerTarget(entity);
+    return entity;
+  }
+
+  createPort({
+    name,
+    device,
+    x,
+    y,
+    ...port
+  }: { device: Entity; name: string; x: number; y: number } & CPort) {
+    const entity = this.ecs.createEntity(
+      device.description + "-" + name.toLowerCase()
+    );
+    this.ecs.devices.get(device)!.ports.push(entity);
+    this.ecs.transforms.set(entity, {
+      parent: device,
+      x,
+      y,
+      w: 32,
+      h: 32,
+    });
+    this.ecs.ports.set(entity, {
+      name: "out",
+      ...port,
+    });
+    this.setPointerTarget(entity);
+    return entity;
   }
 
   createWire(source: Entity, destination: Entity) {
@@ -130,6 +134,14 @@ export class SPrefabs {
     ) {
       this.createWire(destination, source);
     }
+  }
+
+  setPointerTarget(entity: Entity) {
+    this.ecs.pointerTargets.set(entity, {
+      pressed: false,
+      dx: 0,
+      dy: 0,
+    });
   }
 
   getContentBox = (entity: Entity, size: "w" | "h") => {
