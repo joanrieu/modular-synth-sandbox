@@ -79,7 +79,7 @@ export class SPrefabs {
         return getContentBox(entity, "h");
       },
     });
-    this.setPointerTarget(entity);
+    this.ecs.pointerTargets.add(entity);
     return entity;
   }
 
@@ -105,7 +105,7 @@ export class SPrefabs {
       name: "out",
       ...port,
     });
-    this.setPointerTarget(entity);
+    this.ecs.pointerTargets.add(entity);
     return entity;
   }
 
@@ -134,14 +134,6 @@ export class SPrefabs {
     ) {
       this.createWire(destination, source);
     }
-  }
-
-  setPointerTarget(entity: Entity) {
-    this.ecs.pointerTargets.set(entity, {
-      pressed: false,
-      dx: 0,
-      dy: 0,
-    });
   }
 
   getContentBox = (entity: Entity, size: "w" | "h") => {

@@ -1,6 +1,5 @@
 import { CDevice } from "./CDevice";
 import { CPointer } from "./CPointer";
-import { CPointerTarget } from "./CPointerTarget";
 import { CPort } from "./CPort";
 import { CTransform } from "./CTransform";
 import { CWire } from "./CWire";
@@ -15,6 +14,7 @@ import { SWireRenderer } from "./SWireRenderer";
 
 export type Entity = Symbol;
 
+export class EntitySet extends Set<Entity> {}
 export class EntityComponentMap<C> extends Map<Entity, C> {}
 
 export class ECS {
@@ -27,7 +27,7 @@ export class ECS {
   ports = new EntityComponentMap<CPort>();
   wires = new EntityComponentMap<CWire>();
   pointers = new EntityComponentMap<CPointer>();
-  pointerTargets = new EntityComponentMap<CPointerTarget>();
+  pointerTargets = new EntitySet();
 
   prefabs = new SPrefabs(this);
   audio = new SAudio(this);
