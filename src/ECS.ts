@@ -13,6 +13,7 @@ import { SMouseInput } from "./SMouseInput";
 import { SPointerGrabber } from "./SPointerGrabber";
 import { SPortRenderer } from "./SPortRenderer";
 import { SPrefabs } from "./SPrefabs";
+import { SWireManager } from "./SWireManager";
 import { SWireRenderer } from "./SWireRenderer";
 
 export type Entity = Symbol;
@@ -40,6 +41,7 @@ export class ECS {
   mouseInput = new SMouseInput(this);
   pointerGrabber = new SPointerGrabber(this);
   dragAndDrop = new SDragAndDrop(this);
+  wireManager = new SWireManager(this);
   deviceRenderer = new SDeviceRenderer(this);
   portRenderer = new SPortRenderer(this);
   wireRenderer = new SWireRenderer(this);

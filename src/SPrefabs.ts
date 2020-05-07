@@ -8,7 +8,6 @@ export class SPrefabs {
   createScene() {
     const [master, speakers] = this.createMaster({ x: 300, y: 300 });
     const [osc, out] = this.createOscillator({ x: 500, y: 300 });
-    this.createWire(out, speakers);
   }
 
   createMaster({ x, y }: { x: number; y: number }) {
@@ -110,33 +109,6 @@ export class SPrefabs {
     this.ecs.pointerTargets.add(entity);
     this.ecs.pointerGrabTargets.set(entity, {});
     return entity;
-  }
-
-  createWire(source: Entity, destination: Entity) {
-    const {
-      ecs: { ports },
-    } = this;
-    const sourcePort = ports.get(source)!;
-    const destinationPort = ports.get(destination)!;
-    if (
-      sourcePort.output !== undefined &&
-      destinationPort.input !== undefined
-    ) {
-      sourcePort.node.connect(
-        destinationPort.node,
-        sourcePort.output,
-        destinationPort.input
-      );
-      this.ecs.wires.set(this.ecs.createEntity("wire"), {
-        source,
-        destination,
-      });
-    } else if (
-      sourcePort.input !== undefined &&
-      destinationPort.output !== undefined
-    ) {
-      this.createWire(destination, source);
-    }
   }
 
   getContentBox = (entity: Entity, size: "w" | "h") => {

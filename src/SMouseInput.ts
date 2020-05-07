@@ -26,21 +26,23 @@ export class SMouseInput {
   onMouseMove = (e: MouseEvent) => {
     this.transform.x = e.clientX;
     this.transform.y = e.clientY;
-    this.pointer.target = this.findTargetEntity();
+    this.pointer.target = this.findTargetEntity(this.transform);
   };
 
-  findTargetEntity(parent?: Entity): Entity | undefined {
-    for (const entity of this.ecs.pointerTargets) {
-      if (this.ecs.pointers.has(entity)) continue;
-      const transform = this.ecs.display.getWorldTransform(entity);
+  findTargetEntity(
+    pointerTransform: CTransform,
+    parent?: Entity
+  ): Entity | undefined {
+    for (const targetEntity of this.ecs.pointerTargets) {
+      const targetTransform = this.ecs.display.getWorldTransform(targetEntity);
       if (
-        transform.parent === parent &&
-        transform.x <= this.transform.x &&
-        transform.y <= this.transform.y &&
-        transform.x + transform.w > this.transform.x &&
-        transform.y + transform.h > this.transform.y
+        targetTransform.parent === parent &&
+        targetTransform.x <= this.transform.x &&
+        targetTransform.y <= this.transform.y &&
+        targetTransform.x + targetTransform.w > this.transform.x &&
+        targetTransform.y + targetTransform.h > this.transform.y
       ) {
-        return this.findTargetEntity(entity);
+        return this.findTargetEntity(pointerTransform, targetEntity);
       }
     }
     return parent;
