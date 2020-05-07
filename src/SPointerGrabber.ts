@@ -1,10 +1,12 @@
 import { AbstractUpdater } from "./AbstractUpdater";
-import { ECS } from "./ECS";
+import { ECS, Entity } from "./ECS";
 
 export class SPointerGrabber extends AbstractUpdater {
   constructor(readonly ecs: ECS) {
     super();
   }
+
+  dummyGrabTargets = new Set<Entity>();
 
   update() {
     const freePointers = new Map(this.ecs.pointers);
@@ -18,6 +20,10 @@ export class SPointerGrabber extends AbstractUpdater {
           freeTargets.delete(grabbedEntity);
         } else {
           delete grabTarget.grabbed;
+          if (this.dummyGrabTargets.has(grabbedEntity)) {
+            this.dummyGrabTargets.delete(grabbedEntity);
+            this.ecs.pointerGrabTargets.delete(grabbedEntity);
+          }
         }
       }
     }
@@ -29,7 +35,21 @@ export class SPointerGrabber extends AbstractUpdater {
         const dx = grabbedTransform.x - pointerTransform.x;
         const dy = grabbedTransform.y - pointerTransform.y;
         this.ecs.pointerGrabTargets.get(target)!.grabbed = { pointer, dx, dy };
+      } else if (pressed) {
+        this.cancelGrab(pointer);
       }
     }
+  }
+
+  cancelGrab(pointer: Entity) {
+    const dummy = this.ecs.createEntity("cancelled-grab-target");
+    this.dummyGrabTargets.add(dummy);
+    this.ecs.pointerGrabTargets.set(dummy, {
+      grabbed: {
+        pointer,
+        dx: 0,
+        dy: 0,
+      },
+    });
   }
 }

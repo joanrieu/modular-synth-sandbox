@@ -7,8 +7,6 @@ export class SWireManager extends AbstractUpdater {
     super();
   }
 
-  dummyDragTargets = new Set<Entity>();
-
   update() {
     for (const [grabbedEntity, grabTarget] of this.ecs.pointerGrabTargets) {
       if (grabTarget.grabbed && this.ecs.ports.has(grabbedEntity)) {
@@ -16,13 +14,6 @@ export class SWireManager extends AbstractUpdater {
         this.deleteWireIfExists(grabbedEntity, grabTarget.grabbed.pointer) ||
           this.createDraggableWire(grabbedEntity, grabTarget.grabbed.pointer);
         delete grabTarget.grabbed;
-      } else if (
-        !grabTarget.grabbed &&
-        this.dummyDragTargets.has(grabbedEntity)
-      ) {
-        // delete a dummy grab target created to cancel a drag
-        this.ecs.pointerGrabTargets.delete(grabbedEntity);
-        this.dummyDragTargets.delete(grabbedEntity);
       } else if (!grabTarget.grabbed && this.ecs.wires.has(grabbedEntity)) {
         // connect a wire if dropped on a compatible port
         this.dropWire(grabbedEntity);
@@ -35,17 +26,7 @@ export class SWireManager extends AbstractUpdater {
       if (wire.source === grabbedEntity || wire.destination === grabbedEntity) {
         this.disconnect(wire);
         this.ecs.wires.delete(wireEntity);
-        const dummy = this.ecs.createEntity(
-          "dummy-" + grabbedEntity.description
-        );
-        this.dummyDragTargets.add(dummy);
-        this.ecs.pointerGrabTargets.set(dummy, {
-          grabbed: {
-            pointer: pointer,
-            dx: 0,
-            dy: 0,
-          },
-        });
+        this.ecs.pointerGrabber.cancelGrab(pointer);
         return true;
       }
     }
