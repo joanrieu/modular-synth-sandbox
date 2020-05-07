@@ -104,7 +104,7 @@ export class SPrefabs {
       h: 32,
     });
     this.ecs.ports.set(entity, {
-      name: "out",
+      name,
       ...port,
     });
     this.ecs.pointerTargets.add(entity);
