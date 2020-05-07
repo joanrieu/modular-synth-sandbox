@@ -80,6 +80,8 @@ export class SPrefabs {
       },
     });
     this.ecs.pointerTargets.add(entity);
+    this.ecs.pointerGrabTargets.set(entity, {});
+    this.ecs.dragAndDropTargets.add(entity);
     return entity;
   }
 
@@ -106,6 +108,7 @@ export class SPrefabs {
       ...port,
     });
     this.ecs.pointerTargets.add(entity);
+    this.ecs.pointerGrabTargets.set(entity, {});
     return entity;
   }
 

@@ -6,7 +6,6 @@ export class SMouseInput {
   mouse = this.ecs.createEntity("mouse");
   transform: CTransform = { x: 0, y: 0, w: 1, h: 1 };
   pointer: CPointer = { pressed: false };
-  target?: Entity;
 
   constructor(readonly ecs: ECS) {
     ecs.transforms.set(this.mouse, this.transform);
@@ -27,7 +26,7 @@ export class SMouseInput {
   onMouseMove = (e: MouseEvent) => {
     this.transform.x = e.clientX;
     this.transform.y = e.clientY;
-    this.target = this.findTargetEntity();
+    this.pointer.target = this.findTargetEntity();
   };
 
   findTargetEntity(parent?: Entity): Entity | undefined {

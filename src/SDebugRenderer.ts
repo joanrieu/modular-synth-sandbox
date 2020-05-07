@@ -29,9 +29,9 @@ export class SDebugRenderer extends AbstractRenderer {
           write(
             key.toString().padEnd(40, " ") +
               JSON.stringify(value, (k, v) =>
-                ["Object", "Array", "Number"].includes(v.constructor.name)
-                  ? v
-                  : v.toString()
+                v && !["Object", "Array", "Number"].includes(v.constructor.name)
+                  ? v.toString()
+                  : v
               )
           );
         write("");
