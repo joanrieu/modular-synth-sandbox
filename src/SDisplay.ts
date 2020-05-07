@@ -1,4 +1,5 @@
 import { AbstractRenderer } from "./AbstractRenderer";
+import { AbstractUpdater } from "./AbstractUpdater";
 import { ECS, Entity } from "./ECS";
 
 export class SDisplay {
@@ -9,7 +10,7 @@ export class SDisplay {
     document.body.appendChild(this.canvas);
     window.addEventListener("resize", this.resize);
     this.resize();
-    requestAnimationFrame(this.draw);
+    requestAnimationFrame(this.loop);
   }
 
   resize = () => {
@@ -17,15 +18,29 @@ export class SDisplay {
     this.canvas.height = document.body.clientHeight;
   };
 
-  draw = () => {
+  loop = () => {
+    this.update();
+    this.draw();
+    requestAnimationFrame(this.loop);
+  };
+
+  update() {
+    for (const system of Object.values(this.ecs)) {
+      if (system instanceof AbstractUpdater) {
+        system.update();
+      }
+    }
+  }
+
+  draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
     for (const system of Object.values(this.ecs)) {
       if (system instanceof AbstractRenderer) {
         system.draw();
       }
     }
-    requestAnimationFrame(this.draw);
-  };
+  }
 
   getWorldTransform(entity: Entity) {
     const transform = { ...this.ecs.transforms.get(entity)! };
