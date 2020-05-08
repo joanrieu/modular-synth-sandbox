@@ -8,16 +8,12 @@ export class SPrefabs {
   constructor(readonly ecs: ECS) {}
 
   createScene() {
-    this.createToolbox();
+    this.createToolbar();
     this.createMaster({ x: 300, y: 300 });
   }
 
   createMaster({ x, y }: { x: number; y: number }) {
-    const device = this.createDevice({
-      name: "Master",
-      x,
-      y,
-    });
+    const device = this.createDevice({ name: "Master", x, y });
 
     const speakers = this.createPort({
       device,
@@ -31,21 +27,45 @@ export class SPrefabs {
     return device;
   }
 
-  createOscillator({ options }: { options?: OscillatorOptions } = {}) {
-    const device = this.createDevice({
-      name: "Osc",
-    });
+  createOscillator(options?: OscillatorOptions) {
+    const device = this.createDevice({ name: "Osc" });
 
     const node = new OscillatorNode(this.ecs.audio.ctx, options);
     node.start();
 
-    const port = this.createPort({
+    this.createPort({
       name: "out",
       device,
       node,
       output: 0,
       x: 20,
       y: 40,
+    });
+
+    return device;
+  }
+
+  createLPF(options?: BiquadFilterOptions) {
+    const device = this.createDevice({ name: "LPF" });
+
+    const node = new BiquadFilterNode(this.ecs.audio.ctx, options);
+
+    this.createPort({
+      name: "in",
+      device,
+      node,
+      input: 0,
+      x: 20,
+      y: 40,
+    });
+
+    this.createPort({
+      name: "out",
+      device,
+      node,
+      output: 0,
+      x: 20,
+      y: 90,
     });
 
     return device;
@@ -101,7 +121,7 @@ export class SPrefabs {
     return entity;
   }
 
-  createToolbox() {
+  createToolbar() {
     let spot = 1;
     const nextPosition = () => ({
       x: this.ecs.display.canvas.width - 120 * spot++,
@@ -115,6 +135,7 @@ export class SPrefabs {
       () => this.createOscillator(),
       nextPosition()
     );
+    this.createSpawnButton("LPF", () => this.createLPF(), nextPosition());
   }
 
   createSpawnButton(name: string, spawn: () => Entity, transform: CTransform) {
