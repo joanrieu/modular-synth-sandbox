@@ -70,7 +70,6 @@ export class SPrefabs {
         return getContentBox(entity, "h");
       },
     });
-    this.ecs.pointerTargets.add(entity);
     this.ecs.pointerGrabTargets.set(entity, {});
     this.ecs.dragAndDropTargets.add(entity);
     return entity;
@@ -98,7 +97,6 @@ export class SPrefabs {
       name,
       ...port,
     });
-    this.ecs.pointerTargets.add(entity);
     this.ecs.pointerGrabTargets.set(entity, {});
     return entity;
   }
@@ -123,7 +121,6 @@ export class SPrefabs {
     const entity = this.ecs.createEntity("button");
     const grabTarget: CGrabTarget = {};
     this.ecs.transforms.set(entity, transform);
-    this.ecs.pointerTargets.add(entity);
     this.ecs.pointerGrabTargets.set(entity, grabTarget);
     this.ecs.buttons.set(entity, {
       label: name,

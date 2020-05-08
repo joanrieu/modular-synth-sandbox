@@ -33,7 +33,7 @@ export class SMouseInput {
     pointerTransform: CTransform,
     parent?: Entity
   ): Entity | undefined {
-    for (const targetEntity of this.ecs.pointerTargets) {
+    for (const targetEntity of this.ecs.pointerGrabTargets.keys()) {
       const targetTransform = this.ecs.display.getWorldTransform(targetEntity);
       if (
         targetTransform.parent === parent &&

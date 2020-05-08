@@ -34,7 +34,6 @@ export class ECS {
   ports = new EntityComponentMap<CPort>();
   wires = new EntityComponentMap<CWire>();
   pointers = new EntityComponentMap<CPointer>();
-  pointerTargets = new EntitySet();
   pointerGrabTargets = new EntityComponentMap<CGrabTarget>();
   dragAndDropTargets = new EntitySet();
   buttons = new EntityComponentMap<CButton>();
