@@ -1,13 +1,15 @@
 import { CDevice } from "./CDevice";
+import { CGrabTarget } from "./CGrabTarget";
 import { CPort } from "./CPort";
+import { CTransform } from "./CTransform";
 import { ECS, Entity } from "./ECS";
 
 export class SPrefabs {
   constructor(readonly ecs: ECS) {}
 
   createScene() {
-    const [master, speakers] = this.createMaster({ x: 300, y: 300 });
-    const [osc, out] = this.createOscillator({ x: 500, y: 300 });
+    this.createToolbox();
+    this.createMaster({ x: 300, y: 300 });
   }
 
   createMaster({ x, y }: { x: number; y: number }) {
@@ -26,22 +28,12 @@ export class SPrefabs {
       y: 40,
     });
 
-    return [device, speakers];
+    return device;
   }
 
-  createOscillator({
-    x,
-    y,
-    options,
-  }: {
-    x: number;
-    y: number;
-    options?: OscillatorOptions;
-  }) {
+  createOscillator({ options }: { options?: OscillatorOptions } = {}) {
     const device = this.createDevice({
       name: "Osc",
-      x,
-      y,
     });
 
     const node = new OscillatorNode(this.ecs.audio.ctx, options);
@@ -56,15 +48,15 @@ export class SPrefabs {
       y: 40,
     });
 
-    return [device, port];
+    return device;
   }
 
   createDevice({
     name,
-    x,
-    y,
+    x = 0,
+    y = 0,
     ...device
-  }: { name: string; x: number; y: number } & Omit<CDevice, "ports">) {
+  }: { name: string; x?: number; y?: number } & Omit<CDevice, "ports">) {
     const getContentBox = this.getContentBox;
     const entity = this.ecs.createEntity(name.toLowerCase());
     this.ecs.devices.set(entity, { name, ports: [], ...device });
@@ -108,6 +100,44 @@ export class SPrefabs {
     });
     this.ecs.pointerTargets.add(entity);
     this.ecs.pointerGrabTargets.set(entity, {});
+    return entity;
+  }
+
+  createToolbox() {
+    let spot = 1;
+    const nextPosition = () => ({
+      x: this.ecs.display.canvas.width - 120 * spot++,
+      y: 10,
+      w: 100,
+      h: 20,
+    });
+
+    this.createSpawnButton(
+      "Osc",
+      () => this.createOscillator(),
+      nextPosition()
+    );
+  }
+
+  createSpawnButton(name: string, spawn: () => Entity, transform: CTransform) {
+    const entity = this.ecs.createEntity("button");
+    const grabTarget: CGrabTarget = {};
+    this.ecs.transforms.set(entity, transform);
+    this.ecs.pointerTargets.add(entity);
+    this.ecs.pointerGrabTargets.set(entity, grabTarget);
+    this.ecs.buttons.set(entity, {
+      label: name,
+      down: false,
+      onClick: () => {
+        const entity = spawn();
+        this.ecs.pointerGrabTargets.get(entity)!.grabbed = {
+          pointer: grabTarget.grabbed!.pointer,
+          dx: 0,
+          dy: 0,
+        };
+        delete grabTarget.grabbed;
+      },
+    });
     return entity;
   }
 

@@ -9,7 +9,7 @@ export class SDebugRenderer extends AbstractRenderer {
   draw() {
     const ctx = this.ecs.display.ctx;
     ctx.fillStyle = "lime";
-    const fontSize = 10;
+    const fontSize = 8;
     const lineHeight = fontSize * 1.5;
     ctx.font = fontSize + "px monospace";
     ctx.textAlign = "left";
@@ -18,23 +18,29 @@ export class SDebugRenderer extends AbstractRenderer {
     let lineNo = 1;
     function write(text: string) {
       for (const line of text.split("\n")) {
-        ctx.fillText(line, lineHeight, lineNo++ * lineHeight);
+        ctx.fillText(
+          line,
+          2 * fontSize,
+          ctx.canvas.height - lineNo++ * lineHeight
+        );
       }
     }
 
     for (const [key, map] of Object.entries(this.ecs)) {
       if (map instanceof EntityComponentMap) {
-        write("-- " + key + " --");
+        write("");
         for (const [key, value] of map)
           write(
             key.toString().padEnd(40, " ") +
               JSON.stringify(value, (k, v) =>
-                v && !["Object", "Array", "Number"].includes(v.constructor.name)
+                typeof v === "symbol"
                   ? v.toString()
+                  : typeof v === "function"
+                  ? v.name || v.constructor.name
                   : v
               )
           );
-        write("");
+        write("-- " + key + " --");
       }
     }
 
