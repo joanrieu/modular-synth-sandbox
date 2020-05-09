@@ -60,12 +60,21 @@ export class SPrefabs {
     });
 
     this.createPort({
+      name: "freq",
+      device,
+      node,
+      param: node.frequency,
+      x: 20,
+      y: 90,
+    });
+
+    this.createPort({
       name: "out",
       device,
       node,
       output: 0,
       x: 20,
-      y: 90,
+      y: 140,
     });
 
     return device;
