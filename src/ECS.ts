@@ -46,9 +46,9 @@ export class ECS {
   buttonClicker = new SButtonClicker(this);
   dragAndDrop = new SDragAndDrop(this);
   wireManager = new SWireManager(this);
+  // debugRenderer = new SDebugRenderer(this);
   deviceRenderer = new SDeviceRenderer(this);
   portRenderer = new SPortRenderer(this);
   wireRenderer = new SWireRenderer(this);
   buttonRenderer = new SButtonRenderer(this);
-  debugRenderer = new SDebugRenderer(this);
 }

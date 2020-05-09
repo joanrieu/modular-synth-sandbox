@@ -8,15 +8,20 @@ export class SDeviceRenderer extends AbstractRenderer {
 
   draw() {
     const ctx = this.ecs.display.ctx;
-    ctx.strokeStyle = "grey";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    ctx.font = "15px monospace";
-    ctx.fillStyle = "white";
-    ctx.lineWidth = 3;
+    ctx.font = "bold 15px monospace";
+    ctx.lineWidth = 2;
     for (const [entity, device] of this.ecs.devices) {
       const { x, y, w, h } = this.ecs.display.getWorldTransform(entity);
+
+      ctx.strokeStyle = "grey";
       ctx.strokeRect(x, y, w, h);
+
+      ctx.fillStyle = "#222";
+      ctx.fillRect(x, y, w, h);
+
+      ctx.fillStyle = "white";
       ctx.fillText(device.name, x + w / 2, y + 10);
     }
   }

@@ -8,17 +8,21 @@ export class SButtonRenderer extends AbstractRenderer {
 
   draw() {
     const ctx = this.ecs.display.ctx;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    
     for (const [entity, button] of this.ecs.buttons) {
       const { x, y, w, h } = this.ecs.display.getWorldTransform(entity);
-      ctx.fillStyle = button.down ? "#555" : "#333";
-      ctx.fillRect(x, y, w, h);
-      ctx.strokeStyle = "#777";
+
+      ctx.strokeStyle = "grey";
       ctx.strokeRect(x, y, w, h);
-      ctx.strokeStyle = "white";
-      ctx.strokeText(button.label, x + w / 2, y + h / 2);
+
+      ctx.fillStyle = button.down ? "grey" : "#222";
+      ctx.fillRect(x, y, w, h);
+
+      ctx.fillStyle = "white";
+      ctx.fillText(button.label, x + w / 2, y + h / 2);
     }
   }
 }

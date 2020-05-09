@@ -8,7 +8,9 @@ export class SDebugRenderer extends AbstractRenderer {
 
   draw() {
     const ctx = this.ecs.display.ctx;
-    ctx.fillStyle = "lime";
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "grey";
+    ctx.lineWidth = 1;
     const fontSize = 8;
     const lineHeight = fontSize * 1.5;
     ctx.font = fontSize + "px monospace";
@@ -18,6 +20,11 @@ export class SDebugRenderer extends AbstractRenderer {
     let lineNo = 1;
     function write(text: string) {
       for (const line of text.split("\n")) {
+        ctx.strokeText(
+          line,
+          2 * fontSize,
+          ctx.canvas.height - lineNo * lineHeight
+        );
         ctx.fillText(
           line,
           2 * fontSize,
