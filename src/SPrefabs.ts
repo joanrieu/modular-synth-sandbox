@@ -190,10 +190,11 @@ export class SPrefabs {
       down: false,
       onClick: () => {
         const entity = spawn();
+        const transform = this.ecs.transforms.get(entity)!;
         this.ecs.pointerGrabTargets.get(entity)!.grabbed = {
           pointer: grabTarget.grabbed!.pointer,
-          dx: 0,
-          dy: 0,
+          dx: -transform.w / 2,
+          dy: -transform.h / 4,
         };
         delete grabTarget.grabbed;
       },
