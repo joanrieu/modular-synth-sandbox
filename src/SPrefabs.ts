@@ -1,4 +1,3 @@
-import { CDevice } from "./CDevice";
 import { CKnob } from "./CKnob";
 import { CPointerGrabTarget } from "./CPointerGrabTarget";
 import { CPort } from "./CPort";
@@ -13,9 +12,9 @@ export class SPrefabs {
   }
 
   createMaster() {
-    const device = this.createDevice({ name: "Master" });
+    const device = this.createDevice("Master");
 
-    const speakers = this.createPort({
+    this.createPort({
       device,
       name: "spk",
       node: this.ecs.audio.ctx.destination,
@@ -27,10 +26,10 @@ export class SPrefabs {
     return device;
   }
 
-  createOscillator(options?: OscillatorOptions) {
-    const device = this.createDevice({ name: "Osc" });
+  createOscillator() {
+    const device = this.createDevice("Osc");
 
-    const node = new OscillatorNode(this.ecs.audio.ctx, options);
+    const node = new OscillatorNode(this.ecs.audio.ctx);
     node.start();
 
     this.createPort({
@@ -45,10 +44,10 @@ export class SPrefabs {
     return device;
   }
 
-  createLPF(options?: BiquadFilterOptions) {
-    const device = this.createDevice({ name: "LPF" });
+  createLPF() {
+    const device = this.createDevice("LPF");
 
-    const node = new BiquadFilterNode(this.ecs.audio.ctx, options);
+    const node = new BiquadFilterNode(this.ecs.audio.ctx);
 
     this.createPort({
       name: "in",
@@ -88,13 +87,58 @@ export class SPrefabs {
     return device;
   }
 
-  createDevice({
-    name,
-    ...device
-  }: { name: string; x?: number; y?: number } & Omit<CDevice, "ports">) {
+  createGain() {
+    const device = this.createDevice("Gain");
+
+    const node = new GainNode(this.ecs.audio.ctx);
+
+    this.createPort({
+      name: "in",
+      device,
+      node,
+      input: 0,
+      x: 45,
+      y: 40,
+    });
+
+    this.createPort({
+      name: "out",
+      device,
+      node,
+      output: 0,
+      x: 20,
+      y: 90,
+    });
+
+    this.createKnob({
+      name: "gain",
+      device,
+      param: this.clampParam(node.gain, 0, 2),
+      x: 70,
+      y: 90,
+    });
+
+    return device;
+  }
+
+  clampParam(param: AudioParam, minValue: number, maxValue: number) {
+    return new Proxy(param, {
+      get(target, p) {
+        if (p === "minValue") return minValue;
+        if (p === "maxValue") return maxValue;
+        return (target as any)[p];
+      },
+      set(target, p, value) {
+        (target as any)[p] = value;
+        return true;
+      },
+    });
+  }
+
+  createDevice(name: string) {
     const getContentBox = this.getContentBox;
     const entity = this.ecs.createEntity(name.toLowerCase());
-    this.ecs.devices.set(entity, { name, ...device });
+    this.ecs.devices.set(entity, { name });
     this.ecs.transforms.set(entity, {
       x: 0,
       y: 0,
@@ -168,6 +212,8 @@ export class SPrefabs {
       w: 100,
       h: 20,
     });
+
+    this.createSpawnButton("Gain", () => this.createGain(), nextPosition());
 
     this.createSpawnButton("LPF", () => this.createLPF(), nextPosition());
 
