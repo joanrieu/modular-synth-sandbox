@@ -1,5 +1,6 @@
 import { CDevice } from "./CDevice";
-import { CGrabTarget } from "./CGrabTarget";
+import { CKnob } from "./CKnob";
+import { CPointerGrabTarget } from "./CPointerGrabTarget";
 import { CPort } from "./CPort";
 import { CTransform } from "./CTransform";
 import { ECS, Entity } from "./ECS";
@@ -9,11 +10,10 @@ export class SPrefabs {
 
   createScene() {
     this.createToolbar();
-    this.createMaster({ x: 300, y: 300 });
   }
 
-  createMaster({ x, y }: { x: number; y: number }) {
-    const device = this.createDevice({ name: "Master", x, y });
+  createMaster() {
+    const device = this.createDevice({ name: "Master" });
 
     const speakers = this.createPort({
       device,
@@ -55,16 +55,24 @@ export class SPrefabs {
       device,
       node,
       input: 0,
-      x: 20,
+      x: 45,
       y: 40,
     });
 
     this.createPort({
-      name: "freq",
+      name: "fm",
       device,
       node,
       param: node.frequency,
       x: 20,
+      y: 90,
+    });
+
+    this.createKnob({
+      name: "freq",
+      device,
+      param: node.frequency,
+      x: 70,
       y: 90,
     });
 
@@ -73,7 +81,7 @@ export class SPrefabs {
       device,
       node,
       output: 0,
-      x: 20,
+      x: 45,
       y: 140,
     });
 
@@ -82,16 +90,14 @@ export class SPrefabs {
 
   createDevice({
     name,
-    x = 0,
-    y = 0,
     ...device
   }: { name: string; x?: number; y?: number } & Omit<CDevice, "ports">) {
     const getContentBox = this.getContentBox;
     const entity = this.ecs.createEntity(name.toLowerCase());
-    this.ecs.devices.set(entity, { name, ports: [], ...device });
+    this.ecs.devices.set(entity, { name, ...device });
     this.ecs.transforms.set(entity, {
-      x,
-      y,
+      x: 0,
+      y: 0,
       get w() {
         return getContentBox(entity, "w");
       },
@@ -114,7 +120,6 @@ export class SPrefabs {
     const entity = this.ecs.createEntity(
       device.description + "-" + name.toLowerCase()
     );
-    this.ecs.devices.get(device)!.ports.push(entity);
     this.ecs.transforms.set(entity, {
       parent: device,
       x,
@@ -130,6 +135,31 @@ export class SPrefabs {
     return entity;
   }
 
+  createKnob({
+    name,
+    device,
+    x,
+    y,
+    ...knob
+  }: { device: Entity; name: string; x: number; y: number } & CKnob) {
+    const entity = this.ecs.createEntity(
+      device.description + "-" + name.toLowerCase()
+    );
+    this.ecs.transforms.set(entity, {
+      parent: device,
+      x,
+      y,
+      w: 32,
+      h: 32,
+    });
+    this.ecs.knobs.set(entity, {
+      name,
+      ...knob,
+    });
+    this.ecs.pointerGrabTargets.set(entity, {});
+    return entity;
+  }
+
   createToolbar() {
     let spot = 1;
     const nextPosition = () => ({
@@ -139,17 +169,20 @@ export class SPrefabs {
       h: 20,
     });
 
+    this.createSpawnButton("LPF", () => this.createLPF(), nextPosition());
+
     this.createSpawnButton(
       "Osc",
       () => this.createOscillator(),
       nextPosition()
     );
-    this.createSpawnButton("LPF", () => this.createLPF(), nextPosition());
+
+    this.createSpawnButton("Master", () => this.createMaster(), nextPosition());
   }
 
   createSpawnButton(name: string, spawn: () => Entity, transform: CTransform) {
     const entity = this.ecs.createEntity("button");
-    const grabTarget: CGrabTarget = {};
+    const grabTarget: CPointerGrabTarget = {};
     this.ecs.transforms.set(entity, transform);
     this.ecs.pointerGrabTargets.set(entity, grabTarget);
     this.ecs.buttons.set(entity, {

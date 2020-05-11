@@ -1,17 +1,20 @@
 import { CButton } from "./CButton";
 import { CDevice } from "./CDevice";
-import { CGrabTarget } from "./CGrabTarget";
+import { CKnob } from "./CKnob";
+import { CKnobDragZone } from "./CKnobDragZone";
 import { CPointer } from "./CPointer";
+import { CPointerGrabTarget } from "./CPointerGrabTarget";
 import { CPort } from "./CPort";
 import { CTransform } from "./CTransform";
 import { CWire } from "./CWire";
 import { SAudio } from "./SAudio";
 import { SButtonClicker } from "./SButtonClicker";
 import { SButtonRenderer } from "./SButtonRenderer";
-import { SDebugRenderer } from "./SDebugRenderer";
 import { SDeviceRenderer } from "./SDeviceRenderer";
 import { SDisplay } from "./SDisplay";
 import { SDragAndDrop } from "./SDragAndDrop";
+import { SKnobManager } from "./SKnobManager";
+import { SKnobRenderer } from "./SKnobRenderer";
 import { SMouseInput } from "./SMouseInput";
 import { SPointerGrabber } from "./SPointerGrabber";
 import { SPortRenderer } from "./SPortRenderer";
@@ -32,10 +35,12 @@ export class ECS {
   transforms = new EntityComponentMap<CTransform>();
   devices = new EntityComponentMap<CDevice>();
   ports = new EntityComponentMap<CPort>();
+  knobs = new EntityComponentMap<CKnob>();
   wires = new EntityComponentMap<CWire>();
   pointers = new EntityComponentMap<CPointer>();
-  pointerGrabTargets = new EntityComponentMap<CGrabTarget>();
+  pointerGrabTargets = new EntityComponentMap<CPointerGrabTarget>();
   dragAndDropTargets = new EntitySet();
+  knobDragZones = new EntityComponentMap<CKnobDragZone>();
   buttons = new EntityComponentMap<CButton>();
 
   prefabs = new SPrefabs(this);
@@ -46,9 +51,11 @@ export class ECS {
   buttonClicker = new SButtonClicker(this);
   dragAndDrop = new SDragAndDrop(this);
   wireManager = new SWireManager(this);
+  knobManager = new SKnobManager(this);
   // debugRenderer = new SDebugRenderer(this);
   deviceRenderer = new SDeviceRenderer(this);
   portRenderer = new SPortRenderer(this);
+  knobRenderer = new SKnobRenderer(this);
   wireRenderer = new SWireRenderer(this);
   buttonRenderer = new SButtonRenderer(this);
 }

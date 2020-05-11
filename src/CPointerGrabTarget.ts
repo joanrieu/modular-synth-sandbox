@@ -1,6 +1,6 @@
 import { Entity } from "./ECS";
 
-export interface CGrabTarget {
+export interface CPointerGrabTarget {
   grabbed?: {
     pointer: Entity;
     dx: number;
