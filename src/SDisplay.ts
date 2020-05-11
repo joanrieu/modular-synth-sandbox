@@ -35,6 +35,26 @@ export class SDisplay {
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "middle";
+    this.ctx.font = ((this.canvas.height / 8) | 0) + "px monospace";
+    this.ctx.fillStyle = "hsl(180, 50%, 10%)";
+    this.ctx.fillText(
+      "Modular",
+      this.canvas.width / 2,
+      (this.canvas.height * 2) / 6
+    );
+    this.ctx.fillText(
+      "Synth",
+      this.canvas.width / 2,
+      (this.canvas.height * 3) / 6
+    );
+    this.ctx.fillText(
+      "Sandbox",
+      this.canvas.width / 2,
+      (this.canvas.height * 4) / 6
+    );
+
     for (const system of Object.values(this.ecs)) {
       if (system instanceof AbstractRenderer) {
         system.draw();
