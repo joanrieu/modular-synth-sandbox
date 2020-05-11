@@ -12,11 +12,20 @@ export class SPortRenderer extends AbstractRenderer {
     ctx.textBaseline = "middle";
     ctx.font = "10px monospace";
     ctx.lineWidth = 1;
-    ctx.strokeStyle = ctx.fillStyle = "grey";
+
+    const connectedPorts = new Set(
+      [...this.ecs.wires.values()].flatMap((wire) => [
+        wire.source,
+        wire.destination,
+      ])
+    );
 
     for (const [entity, port] of this.ecs.ports) {
       const { x, y, w, h } = this.ecs.display.getWorldTransform(entity);
       const r = Math.min(w, h) / 2;
+
+      const on = connectedPorts.has(entity);
+      ctx.strokeStyle = ctx.fillStyle = on ? "white" : "grey";
 
       ctx.beginPath();
       ctx.arc(x + r, y + r, r, -Math.PI, Math.PI);
