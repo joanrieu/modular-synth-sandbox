@@ -15,6 +15,7 @@ import { SDisplay } from "./SDisplay";
 import { SDragAndDrop } from "./SDragAndDrop";
 import { SKnobManager } from "./SKnobManager";
 import { SKnobRenderer } from "./SKnobRenderer";
+import { SMidiIO } from "./SMidiIO";
 import { SMouseInput } from "./SMouseInput";
 import { SPointerGrabber } from "./SPointerGrabber";
 import { SPortRenderer } from "./SPortRenderer";
@@ -52,6 +53,7 @@ export class ECS {
   dragAndDrop = new SDragAndDrop(this);
   wireManager = new SWireManager(this);
   knobManager = new SKnobManager(this);
+  midiIO = new SMidiIO(this);
   // debugRenderer = new SDebugRenderer(this);
   deviceRenderer = new SDeviceRenderer(this);
   portRenderer = new SPortRenderer(this);
