@@ -7,7 +7,7 @@ enum MidiB0 {
 
 export class SMidiIO {
   constructor(readonly ecs: ECS) {
-    navigator.requestMIDIAccess().then((midi) => {
+    navigator.requestMIDIAccess?.().then((midi) => {
       for (const port of midi.inputs.values()) {
         this.createInput(port);
       }
