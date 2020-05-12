@@ -32,16 +32,48 @@ export class SPrefabs {
     const node = new OscillatorNode(this.ecs.audio.ctx);
     node.start();
 
+    this.createOscillatorWaveButton(device, node, "sine", 0);
+    this.createOscillatorWaveButton(device, node, "triangle", 1);
+    this.createOscillatorWaveButton(device, node, "sawtooth", 2);
+    this.createOscillatorWaveButton(device, node, "square", 3);
+
     this.createPort({
       name: "out",
       device,
       node,
       output: 0,
-      x: 20,
-      y: 40,
+      x: 44,
+      y: 140,
     });
 
     return device;
+  }
+
+  createOscillatorWaveButton(
+    device: Entity,
+    node: OscillatorNode,
+    type: OscillatorType,
+    line: number
+  ) {
+    const button = this.ecs.createEntity("osc-waveform-" + type);
+    this.ecs.transforms.set(button, {
+      parent: device,
+      x: 20,
+      y: 40 + 19 * line,
+      w: 80,
+      h: 20,
+    });
+    this.ecs.buttons.set(button, {
+      label: type,
+      onClick: () => {
+        node.type = type;
+      },
+      get down() {
+        return node.type === type;
+      },
+      set down(down) {},
+    });
+    this.ecs.pointerGrabTargets.set(button, {});
   }
 
   createLPF() {
