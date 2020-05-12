@@ -79,16 +79,24 @@ export class SWireManager extends AbstractUpdater {
 
     if (
       sourcePort.output === undefined ||
-      destinationPort.input === undefined
+      (destinationPort.input === undefined &&
+        destinationPort.param === undefined)
     ) {
       return false;
     }
 
-    sourcePort.node[connect ? "connect" : "disconnect"](
-      destinationPort.node,
-      sourcePort.output,
-      destinationPort.input
-    );
+    if (destinationPort.param) {
+      sourcePort.node[connect ? "connect" : "disconnect"](
+        destinationPort.param,
+        sourcePort.output
+      );
+    } else {
+      sourcePort.node[connect ? "connect" : "disconnect"](
+        destinationPort.node,
+        sourcePort.output,
+        destinationPort.input
+      );
+    }
 
     return true;
   }
