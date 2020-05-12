@@ -37,13 +37,21 @@ export class SPrefabs {
     this.createOscillatorWaveButton(device, node, "sawtooth", 2);
     this.createOscillatorWaveButton(device, node, "square", 3);
 
+    this.createKnob({
+      name: "dtn",
+      device,
+      param: this.clampParam(node.detune, -100, 100),
+      x: 44,
+      y: 140,
+    });
+
     this.createPort({
       name: "out",
       device,
       node,
       output: 0,
       x: 44,
-      y: 140,
+      y: 190,
     });
 
     return device;
