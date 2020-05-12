@@ -161,6 +161,40 @@ export class SPrefabs {
     return device;
   }
 
+  createPanner() {
+    const device = this.createDevice("Panner");
+
+    const node = new StereoPannerNode(this.ecs.audio.ctx);
+
+    this.createPort({
+      name: "in",
+      device,
+      node,
+      input: 0,
+      x: 20,
+      y: 40,
+    });
+
+    this.createKnob({
+      name: "pan",
+      device,
+      param: node.pan,
+      x: 20,
+      y: 90,
+    });
+
+    this.createPort({
+      name: "out",
+      device,
+      node,
+      output: 0,
+      x: 20,
+      y: 140,
+    });
+
+    return device;
+  }
+
   clampParam(param: AudioParam, minValue: number, maxValue: number) {
     return new Proxy(param, {
       get(target, p) {
@@ -252,6 +286,8 @@ export class SPrefabs {
       w: 100,
       h: 20,
     });
+
+    this.createSpawnButton("Panner", () => this.createPanner(), nextPosition());
 
     this.createSpawnButton("Gain", () => this.createGain(), nextPosition());
 
