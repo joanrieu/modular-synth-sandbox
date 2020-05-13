@@ -22,7 +22,7 @@ export class SDeviceRenderer extends AbstractRenderer {
       ctx.fillRect(x, y, w, h);
 
       ctx.fillStyle = "white";
-      ctx.fillText(device.name, x + w / 2, y + 10);
+      ctx.fillText(device.name, x + w / 2, y + 10, w - 20);
     }
   }
 }

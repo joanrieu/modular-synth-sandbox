@@ -101,7 +101,6 @@ export class SPrefabs {
     this.createPort({
       name: "fm",
       device,
-      node,
       param: node.frequency,
       x: 20,
       y: 90,
@@ -279,19 +278,15 @@ export class SPrefabs {
   }
 
   createToolbar() {
-    let spot = 1;
+    let spot = 0;
     const nextPosition = () => ({
-      x: this.ecs.display.canvas.width - 120 * spot++,
+      x: 10 + 110 * spot++,
       y: 10,
       w: 100,
       h: 20,
     });
 
-    this.createSpawnButton("Panner", () => this.createPanner(), nextPosition());
-
-    this.createSpawnButton("Gain", () => this.createGain(), nextPosition());
-
-    this.createSpawnButton("LPF", () => this.createLPF(), nextPosition());
+    this.createSpawnButton("Master", () => this.createMaster(), nextPosition());
 
     this.createSpawnButton(
       "Osc",
@@ -299,7 +294,11 @@ export class SPrefabs {
       nextPosition()
     );
 
-    this.createSpawnButton("Master", () => this.createMaster(), nextPosition());
+    this.createSpawnButton("LPF", () => this.createLPF(), nextPosition());
+
+    this.createSpawnButton("Gain", () => this.createGain(), nextPosition());
+
+    this.createSpawnButton("Panner", () => this.createPanner(), nextPosition());
   }
 
   createSpawnButton(name: string, spawn: () => Entity, transform: CTransform) {
