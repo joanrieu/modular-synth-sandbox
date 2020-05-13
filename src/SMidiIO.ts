@@ -10,17 +10,19 @@ export class SMidiIO {
     let index = 0;
     navigator.requestMIDIAccess?.().then((midi) => {
       for (const port of midi.inputs.values()) {
-        this.createInput(port, ++index);
+        this.createInput(port, index++);
       }
     });
   }
 
   createInput(port: WebMidi.MIDIInput, index: number) {
-    const device = this.ecs.prefabs.createDevice(port.name || "MIDI in");
+    const device = this.ecs.prefabs.createDevice(
+      port.name || "MIDI in #" + index
+    );
     const width = 300;
     this.ecs.transforms.set(device, {
-      x: 100,
-      y: 110 * index,
+      x: 10,
+      y: 10 + 100 * index,
       w: width,
       h: 90,
     });

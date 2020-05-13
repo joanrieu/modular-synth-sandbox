@@ -32,18 +32,34 @@ export class SPrefabs {
     const node = new OscillatorNode(this.ecs.audio.ctx);
     node.start();
 
-    this.createOscillatorWaveButton(device, node, "sine", 0);
-    this.createOscillatorWaveButton(device, node, "triangle", 1);
-    this.createOscillatorWaveButton(device, node, "sawtooth", 2);
-    this.createOscillatorWaveButton(device, node, "square", 3);
+    this.createPort({
+      name: "freq",
+      device,
+      param: node.frequency,
+      x: 20,
+      y: 40,
+    });
+
+    this.createKnob({
+      name: "freq",
+      device,
+      param: this.clampParam(node.frequency, 0, 20000),
+      x: 70,
+      y: 40,
+    });
 
     this.createKnob({
       name: "dtn",
       device,
       param: this.clampParam(node.detune, -100, 100),
       x: 44,
-      y: 140,
+      y: 90,
     });
+
+    this.createOscillatorWaveButton(device, node, "sine", 0);
+    this.createOscillatorWaveButton(device, node, "triangle", 1);
+    this.createOscillatorWaveButton(device, node, "sawtooth", 2);
+    this.createOscillatorWaveButton(device, node, "square", 3);
 
     this.createPort({
       name: "out",
@@ -51,7 +67,7 @@ export class SPrefabs {
       node,
       output: 0,
       x: 44,
-      y: 190,
+      y: 230,
     });
 
     return device;
@@ -67,7 +83,7 @@ export class SPrefabs {
     this.ecs.transforms.set(button, {
       parent: device,
       x: 20,
-      y: 40 + 19 * line,
+      y: 140 + 19 * line,
       w: 80,
       h: 20,
     });
@@ -279,9 +295,12 @@ export class SPrefabs {
 
   createToolbar() {
     let spot = 0;
+    const self = this;
     const nextPosition = () => ({
-      x: 10 + 110 * spot++,
-      y: 10,
+      get x() {
+        return self.ecs.display.canvas.width - 110;
+      },
+      y: 10 + 20 * spot++,
       w: 100,
       h: 20,
     });
