@@ -142,8 +142,8 @@ export class SPrefabs {
     return device;
   }
 
-  createGain() {
-    const device = this.createDevice("Gain");
+  createGain(maxGain: number) {
+    const device = this.createDevice("Gain x" + maxGain);
 
     const node = new GainNode(this.ecs.audio.ctx);
 
@@ -168,7 +168,7 @@ export class SPrefabs {
     this.createKnob({
       name: "gain",
       device,
-      param: this.clampParam(node.gain, 0, 2),
+      param: this.clampParam(node.gain, 0, maxGain),
       x: 70,
       y: 90,
     });
@@ -315,7 +315,13 @@ export class SPrefabs {
 
     this.createSpawnButton("LPF", () => this.createLPF(), nextPosition());
 
-    this.createSpawnButton("Gain", () => this.createGain(), nextPosition());
+    this.createSpawnButton("Gain x2", () => this.createGain(2), nextPosition());
+
+    this.createSpawnButton(
+      "Gain x100",
+      () => this.createGain(100),
+      nextPosition()
+    );
 
     this.createSpawnButton("Panner", () => this.createPanner(), nextPosition());
   }
