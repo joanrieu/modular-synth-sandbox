@@ -26,48 +26,70 @@ export class SPrefabs {
     return device;
   }
 
-  createOscillator() {
-    const device = this.createDevice("Osc");
+  createOscillator(audio = true) {
+    const device = this.createDevice(audio ? "Osc" : "LFO");
 
-    const node = new OscillatorNode(this.ecs.audio.ctx);
+    const node = new OscillatorNode(this.ecs.audio.ctx, {
+      frequency: audio ? 440 : 1,
+    });
     node.start();
 
-    this.createPort({
-      name: "freq",
-      device,
-      param: node.frequency,
-      x: 20,
-      y: 40,
-    });
+    if (audio) {
+      this.createPort({
+        name: "freq",
+        device,
+        param: node.frequency,
+        x: 20,
+        y: 40,
+      });
+    }
 
     this.createKnob({
-      name: "freq",
+      name: audio ? "freq" : "rate",
       device,
-      param: this.clampParam(node.frequency, 0, 20000),
+      param: this.clampParam(node.frequency, 0, audio ? 20000 : 20),
       x: 70,
       y: 40,
     });
 
-    this.createKnob({
-      name: "dtn",
-      device,
-      param: this.clampParam(node.detune, -100, 100),
-      x: 44,
-      y: 90,
-    });
+    if (audio) {
+      this.createKnob({
+        name: "dtn",
+        device,
+        param: this.clampParam(node.detune, -100, 100),
+        x: 44,
+        y: 90,
+      });
+    }
 
-    this.createOscillatorWaveButton(device, node, "sine", 0);
-    this.createOscillatorWaveButton(device, node, "triangle", 1);
-    this.createOscillatorWaveButton(device, node, "sawtooth", 2);
-    this.createOscillatorWaveButton(device, node, "square", 3);
+    this.createOscillatorWaveButton(device, node, "sine", 0, audio);
+    this.createOscillatorWaveButton(device, node, "triangle", 1, audio);
+    this.createOscillatorWaveButton(device, node, "sawtooth", 2, audio);
+    this.createOscillatorWaveButton(device, node, "square", 3, audio);
+
+    let outNode: AudioNode = node;
+
+    if (!audio) {
+      const gainNode = new GainNode(this.ecs.audio.ctx, { gain: 50 });
+      outNode.connect(gainNode, 0);
+      outNode = gainNode;
+
+      this.createKnob({
+        name: "amp",
+        device,
+        param: this.clampParam(gainNode.gain, 0, 100),
+        x: 20,
+        y: 40,
+      });
+    }
 
     this.createPort({
       name: "out",
       device,
-      node,
+      node: outNode,
       output: 0,
       x: 44,
-      y: 230,
+      y: audio ? 240 : 190,
     });
 
     return device;
@@ -77,13 +99,14 @@ export class SPrefabs {
     device: Entity,
     node: OscillatorNode,
     type: OscillatorType,
-    line: number
+    line: number,
+    audio: boolean
   ) {
     const button = this.ecs.createEntity("osc-waveform-" + type);
     this.ecs.transforms.set(button, {
       parent: device,
       x: 20,
-      y: 140 + 19 * line,
+      y: (audio ? 140 : 90) + 19 * line,
       w: 80,
       h: 20,
     });
@@ -210,6 +233,40 @@ export class SPrefabs {
     return device;
   }
 
+  createDelay(maxDelayTime = 10) {
+    const device = this.createDevice("Delay");
+
+    const node = new DelayNode(this.ecs.audio.ctx, { maxDelayTime });
+
+    this.createPort({
+      name: "in",
+      device,
+      node,
+      input: 0,
+      x: 20,
+      y: 40,
+    });
+
+    this.createKnob({
+      name: "val",
+      device,
+      param: node.delayTime,
+      x: 20,
+      y: 90,
+    });
+
+    this.createPort({
+      name: "out",
+      device,
+      node,
+      output: 0,
+      x: 20,
+      y: 140,
+    });
+
+    return device;
+  }
+
   clampParam(param: AudioParam, minValue: number, maxValue: number) {
     return new Proxy(param, {
       get(target, p) {
@@ -313,6 +370,12 @@ export class SPrefabs {
       nextPosition()
     );
 
+    this.createSpawnButton(
+      "LFO",
+      () => this.createOscillator(false),
+      nextPosition()
+    );
+
     this.createSpawnButton("LPF", () => this.createLPF(), nextPosition());
 
     this.createSpawnButton("Gain x2", () => this.createGain(2), nextPosition());
@@ -324,6 +387,8 @@ export class SPrefabs {
     );
 
     this.createSpawnButton("Panner", () => this.createPanner(), nextPosition());
+
+    this.createSpawnButton("Delay", () => this.createDelay(), nextPosition());
   }
 
   createSpawnButton(name: string, spawn: () => Entity, transform: CTransform) {
