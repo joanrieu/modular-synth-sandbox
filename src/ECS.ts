@@ -10,7 +10,6 @@ import { CWire } from "./CWire";
 import { SAudio } from "./SAudio";
 import { SButtonClicker } from "./SButtonClicker";
 import { SButtonRenderer } from "./SButtonRenderer";
-import { SDebugRenderer } from "./SDebugRenderer";
 import { SDeviceRenderer } from "./SDeviceRenderer";
 import { SDisplay } from "./SDisplay";
 import { SDragAndDrop } from "./SDragAndDrop";
@@ -55,7 +54,7 @@ export class ECS {
   wireManager = new SWireManager(this);
   knobManager = new SKnobManager(this);
   midiIO = new SMidiIO(this);
-  debugRenderer = new SDebugRenderer(this);
+  // debugRenderer = new SDebugRenderer(this);
   deviceRenderer = new SDeviceRenderer(this);
   portRenderer = new SPortRenderer(this);
   knobRenderer = new SKnobRenderer(this);
