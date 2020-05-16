@@ -20,12 +20,17 @@ export class SScopeRenderer extends AbstractRenderer {
 
       const buffer = new Float32Array(scope.node.frequencyBinCount);
       scope.node.getFloatTimeDomainData(buffer);
-      let x = 0;
+
+      const zx = buffer.findIndex((sample) => ((sample * 100) | 0) === 0);
+      const ox = buffer.findIndex(
+        (sample, x) => x > zx && ((sample * 100) | 0) > 0
+      );
+
       ctx.beginPath();
-      for (const sample of buffer) {
+      for (let x = 0; x < buffer.length; ++x) {
         ctx.lineTo(
           (x++ * transform.w) / buffer.length,
-          sample * (transform.h / 2)
+          buffer[(ox + x) % buffer.length] * (transform.h / 2)
         );
       }
       ctx.stroke();
