@@ -18,8 +18,10 @@ export class SDeviceRenderer extends AbstractRenderer {
       ctx.strokeStyle = "grey";
       ctx.strokeRect(x, y, w, h);
 
-      ctx.fillStyle = "#222";
-      ctx.fillRect(x, y, w, h);
+      if (!this.ecs.scopes.has(entity)) {
+        ctx.fillStyle = "#222";
+        ctx.fillRect(x, y, w, h);
+      }
 
       ctx.fillStyle = "white";
       ctx.fillText(device.name, x + w / 2, y + 10, w - 20);

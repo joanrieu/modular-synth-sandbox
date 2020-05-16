@@ -5,6 +5,7 @@ import { CKnobDragZone } from "./CKnobDragZone";
 import { CPointer } from "./CPointer";
 import { CPointerGrabTarget } from "./CPointerGrabTarget";
 import { CPort } from "./CPort";
+import { CScope } from "./CScope";
 import { CTransform } from "./CTransform";
 import { CWire } from "./CWire";
 import { SAudio } from "./SAudio";
@@ -20,6 +21,7 @@ import { SMouseInput } from "./SMouseInput";
 import { SPointerGrabber } from "./SPointerGrabber";
 import { SPortRenderer } from "./SPortRenderer";
 import { SPrefabs } from "./SPrefabs";
+import { SScopeRenderer } from "./SScopeRenderer";
 import { SWireManager } from "./SWireManager";
 import { SWireRenderer } from "./SWireRenderer";
 
@@ -43,6 +45,7 @@ export class ECS {
   dragAndDropTargets = new EntitySet();
   knobDragZones = new EntityComponentMap<CKnobDragZone>();
   buttons = new EntityComponentMap<CButton>();
+  scopes = new EntityComponentMap<CScope>();
 
   prefabs = new SPrefabs(this);
   audio = new SAudio(this);
@@ -55,6 +58,7 @@ export class ECS {
   knobManager = new SKnobManager(this);
   midiIO = new SMidiIO(this);
   // debugRenderer = new SDebugRenderer(this);
+  scopeRenderer = new SScopeRenderer(this);
   deviceRenderer = new SDeviceRenderer(this);
   portRenderer = new SPortRenderer(this);
   knobRenderer = new SKnobRenderer(this);

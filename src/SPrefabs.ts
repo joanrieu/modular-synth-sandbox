@@ -145,6 +145,19 @@ export class SPrefabs {
     return device;
   }
 
+  createScope() {
+    const device = this.createDevice("Scope");
+    this.ecs.transforms.set(device, { x: 0, y: 0, w: 300, h: 200 });
+    const node = new AnalyserNode(this.ecs.audio.ctx);
+    this.ecs.scopes.set(device, { node });
+    this.createPort(device, 10, 10, {
+      name: "in",
+      node,
+      input: 0,
+    });
+    return device;
+  }
+
   clampParam(param: AudioParam, minValue: number, maxValue: number) {
     return new Proxy(param, {
       get(target, p) {
@@ -255,6 +268,8 @@ export class SPrefabs {
     this.createSpawnButton("Panner", () => this.createPanner(), nextPosition());
 
     this.createSpawnButton("Delay", () => this.createDelay(), nextPosition());
+
+    this.createSpawnButton("Scope", () => this.createScope(), nextPosition());
   }
 
   createSpawnButton(name: string, spawn: () => Entity, transform: CTransform) {
