@@ -31,13 +31,10 @@ export class SMidiIO {
       offset: 0,
     });
     gateNode.start();
-    this.ecs.prefabs.createPort({
+    this.ecs.prefabs.createPort(device, (width - 32) / 2 - 25, 40, {
       name: "gate",
-      device,
       node: gateNode,
       output: 0,
-      x: (width - 32) / 2 - 25,
-      y: 40,
     });
 
     let lastNote = 440;
@@ -45,13 +42,10 @@ export class SMidiIO {
       offset: lastNote,
     });
     freqNode.start();
-    this.ecs.prefabs.createPort({
+    this.ecs.prefabs.createPort(device, (width - 32) / 2 + 25, 40, {
       name: "freq",
-      device,
       node: freqNode,
       output: 0,
-      x: (width - 32) / 2 + 25,
-      y: 40,
     });
 
     port.addEventListener("midimessage", (e) => {

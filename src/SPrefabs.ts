@@ -14,13 +14,10 @@ export class SPrefabs {
   createMaster() {
     const device = this.createDevice("Master");
 
-    this.createPort({
-      device,
+    this.createPort(device, 20, 40, {
       name: "spk",
       node: this.ecs.audio.ctx.destination,
       input: 0,
-      x: 20,
-      y: 40,
     });
 
     return device;
@@ -35,30 +32,21 @@ export class SPrefabs {
     node.start();
 
     if (audio) {
-      this.createPort({
+      this.createPort(device, 20, 40, {
         name: "freq",
-        device,
         param: node.frequency,
-        x: 20,
-        y: 40,
       });
     }
 
-    this.createKnob({
+    this.createKnob(device, 70, 40, {
       name: audio ? "freq" : "rate",
-      device,
       param: this.clampParam(node.frequency, 0, audio ? 20000 : 20),
-      x: 70,
-      y: 40,
     });
 
     if (audio) {
-      this.createKnob({
+      this.createKnob(device, 44, 90, {
         name: "dtn",
-        device,
         param: this.clampParam(node.detune, -100, 100),
-        x: 44,
-        y: 90,
       });
     }
 
@@ -74,22 +62,16 @@ export class SPrefabs {
       outNode.connect(gainNode, 0);
       outNode = gainNode;
 
-      this.createKnob({
+      this.createKnob(device, 20, 40, {
         name: "amp",
-        device,
         param: this.clampParam(gainNode.gain, 0, 100),
-        x: 20,
-        y: 40,
       });
     }
 
-    this.createPort({
+    this.createPort(device, 44, audio ? 240 : 190, {
       name: "out",
-      device,
       node: outNode,
       output: 0,
-      x: 44,
-      y: audio ? 240 : 190,
     });
 
     return device;
@@ -125,145 +107,41 @@ export class SPrefabs {
 
   createLPF() {
     const device = this.createDevice("LPF");
-
     const node = new BiquadFilterNode(this.ecs.audio.ctx);
-
-    this.createPort({
-      name: "in",
-      device,
-      node,
-      input: 0,
-      x: 45,
-      y: 40,
-    });
-
-    this.createPort({
-      name: "fm",
-      device,
-      param: node.frequency,
-      x: 20,
-      y: 90,
-    });
-
-    this.createKnob({
-      name: "freq",
-      device,
-      param: node.frequency,
-      x: 70,
-      y: 90,
-    });
-
-    this.createPort({
-      name: "out",
-      device,
-      node,
-      output: 0,
-      x: 45,
-      y: 140,
-    });
-
+    this.createPort(device, 45, 40, { name: "in", node, input: 0 });
+    this.createPort(device, 20, 90, { name: "fm", param: node.frequency });
+    this.createKnob(device, 70, 90, { name: "freq", param: node.frequency });
+    this.createPort(device, 45, 140, { name: "out", node, output: 0 });
     return device;
   }
 
   createGain(maxGain: number) {
     const device = this.createDevice("Gain x" + maxGain);
-
     const node = new GainNode(this.ecs.audio.ctx);
-
-    this.createPort({
-      name: "in",
-      device,
-      node,
-      input: 0,
-      x: 45,
-      y: 40,
-    });
-
-    this.createPort({
-      name: "out",
-      device,
-      node,
-      output: 0,
-      x: 20,
-      y: 90,
-    });
-
-    this.createKnob({
+    this.createPort(device, 45, 40, { name: "in", node, input: 0 });
+    this.createPort(device, 20, 90, { name: "out", node, output: 0 });
+    this.createKnob(device, 70, 90, {
       name: "gain",
-      device,
       param: this.clampParam(node.gain, 0, maxGain),
-      x: 70,
-      y: 90,
     });
-
     return device;
   }
 
   createPanner() {
     const device = this.createDevice("Panner");
-
     const node = new StereoPannerNode(this.ecs.audio.ctx);
-
-    this.createPort({
-      name: "in",
-      device,
-      node,
-      input: 0,
-      x: 20,
-      y: 40,
-    });
-
-    this.createKnob({
-      name: "pan",
-      device,
-      param: node.pan,
-      x: 20,
-      y: 90,
-    });
-
-    this.createPort({
-      name: "out",
-      device,
-      node,
-      output: 0,
-      x: 20,
-      y: 140,
-    });
-
+    this.createPort(device, 20, 40, { name: "in", node, input: 0 });
+    this.createKnob(device, 20, 90, { name: "pan", param: node.pan });
+    this.createPort(device, 20, 140, { name: "out", node, output: 0 });
     return device;
   }
 
   createDelay(maxDelayTime = 10) {
     const device = this.createDevice("Delay");
-
     const node = new DelayNode(this.ecs.audio.ctx, { maxDelayTime });
-
-    this.createPort({
-      name: "in",
-      device,
-      node,
-      input: 0,
-      x: 20,
-      y: 40,
-    });
-
-    this.createKnob({
-      name: "val",
-      device,
-      param: node.delayTime,
-      x: 20,
-      y: 90,
-    });
-
-    this.createPort({
-      name: "out",
-      device,
-      node,
-      output: 0,
-      x: 20,
-      y: 140,
-    });
-
+    this.createPort(device, 20, 40, { name: "in", node, input: 0 });
+    this.createKnob(device, 20, 90, { name: "val", param: node.delayTime });
+    this.createPort(device, 20, 140, { name: "out", node, output: 0 });
     return device;
   }
 
@@ -300,15 +178,9 @@ export class SPrefabs {
     return entity;
   }
 
-  createPort({
-    name,
-    device,
-    x,
-    y,
-    ...port
-  }: { device: Entity; name: string; x: number; y: number } & CPort) {
+  createPort(device: Entity, x: number, y: number, port: CPort) {
     const entity = this.ecs.createEntity(
-      device.description + "-" + name.toLowerCase()
+      device.description + "-" + port.name.toLowerCase()
     );
     this.ecs.transforms.set(entity, {
       parent: device,
@@ -325,15 +197,9 @@ export class SPrefabs {
     return entity;
   }
 
-  createKnob({
-    name,
-    device,
-    x,
-    y,
-    ...knob
-  }: { device: Entity; name: string; x: number; y: number } & CKnob) {
+  createKnob(device: Entity, x: number, y: number, knob: CKnob) {
     const entity = this.ecs.createEntity(
-      device.description + "-" + name.toLowerCase()
+      device.description + "-" + knob.name.toLowerCase()
     );
     this.ecs.transforms.set(entity, {
       parent: device,
