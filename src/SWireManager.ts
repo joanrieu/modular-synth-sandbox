@@ -38,6 +38,7 @@ export class SWireManager extends AbstractUpdater {
     this.ecs.wires.set(wire, {
       source: grabbedEntity,
       destination: pointer,
+      hue: Math.random(),
     });
     this.ecs.pointerGrabTargets.set(wire, {
       grabbed: {

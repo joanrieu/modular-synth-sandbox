@@ -10,7 +10,6 @@ export class SWireRenderer extends AbstractRenderer {
     const ctx = this.ecs.display.ctx;
     ctx.lineWidth = 10;
     ctx.lineCap = "round";
-    ctx.strokeStyle = "rgba(255, 255, 255, .3)";
     for (const [entity, wire] of this.ecs.wires) {
       const source = this.ecs.display.getWorldTransform(wire.source);
       const destination = this.ecs.display.getWorldTransform(wire.destination);
@@ -24,6 +23,8 @@ export class SWireRenderer extends AbstractRenderer {
         destination.x + destination.w / 2,
         destination.y + destination.h * 0.8
       );
+      ctx.strokeStyle =
+        "hsla(" + ((wire.hue * 6) | 0) * 60 + "deg, 100%, 70%, .5)";
       ctx.stroke();
     }
   }

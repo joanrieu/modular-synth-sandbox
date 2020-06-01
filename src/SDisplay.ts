@@ -38,7 +38,7 @@ export class SDisplay {
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
     this.ctx.font = ((this.canvas.height / 8) | 0) + "px monospace";
-    this.ctx.fillStyle = "hsl(180, 50%, 10%)";
+    this.ctx.fillStyle = "hsla(0, 0%, 0%)";
     this.ctx.fillText(
       "Modular",
       this.canvas.width / 2,
