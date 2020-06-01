@@ -38,22 +38,21 @@ export class SMidiIO {
     });
 
     let lastNote = 440;
-    const freqNode = new ConstantSourceNode(this.ecs.audio.ctx, {
+    const cvNode = new ConstantSourceNode(this.ecs.audio.ctx, {
       offset: lastNote,
     });
-    freqNode.start();
+    cvNode.start();
     this.ecs.prefabs.createPort(device, (width - 32) / 2 + 25, 40, {
-      name: "freq",
-      node: freqNode,
+      name: "cv",
+      node: cvNode,
       output: 0,
     });
 
     port.addEventListener("midimessage", (e) => {
       const [command, note, velocity] = e.data;
       if (command === MidiB0.NOTE_ON && velocity !== 0) {
-        const freq = this.noteToFrequency(note);
         gateNode.offset.value = 1;
-        freqNode.offset.value = freq;
+        cvNode.offset.value = this.noteToCV(note);
         lastNote = note;
       } else if (
         command === MidiB0.NOTE_OFF ||
@@ -66,7 +65,7 @@ export class SMidiIO {
     });
   }
 
-  noteToFrequency(note: number) {
-    return (440 / 32) * 2 ** ((note - 9) / 12);
+  noteToCV(note: number) {
+    return 2 ** ((note - 33) / 12);
   }
 }

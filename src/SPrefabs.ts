@@ -32,9 +32,17 @@ export class SPrefabs {
     node.start();
 
     if (audio) {
+      const gainNode = new GainNode(this.ecs.audio.ctx, {
+        gain:
+          2 /* make up for division caused by the knob */ *
+          55 /* convert CV to Hz */,
+      });
+      gainNode.connect(node.frequency, 0);
+
       this.createPort(device, 20, 40, {
         name: "freq",
-        param: node.frequency,
+        node: gainNode,
+        input: 0,
       });
     }
 
