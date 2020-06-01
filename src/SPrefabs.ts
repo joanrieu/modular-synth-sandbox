@@ -24,7 +24,7 @@ export class SPrefabs {
   }
 
   createOscillator(audio = true) {
-    const device = this.createDevice(audio ? "Osc" : "LFO");
+    const device = this.createDevice(audio ? "VCO" : "LFO");
 
     const node = new OscillatorNode(this.ecs.audio.ctx, {
       frequency: audio ? 440 : 1,
@@ -244,7 +244,7 @@ export class SPrefabs {
     this.createSpawnButton("Master", () => this.createMaster(), nextPosition());
 
     this.createSpawnButton(
-      "Osc",
+      "VCO",
       () => this.createOscillator(),
       nextPosition()
     );
