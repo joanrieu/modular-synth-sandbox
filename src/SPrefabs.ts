@@ -123,16 +123,58 @@ export class SPrefabs {
     return device;
   }
 
-  createGain(maxGain: number) {
-    const device = this.createDevice("Gain x" + maxGain);
-    const node = new GainNode(this.ecs.audio.ctx);
-    this.createPort(device, 45, 40, { name: "in", node, input: 0 });
-    this.createPort(device, 20, 90, { name: "out", node, output: 0 });
+  createVCA() {
+    const device = this.createDevice("VCA");
+
+    const node1 = new GainNode(this.ecs.audio.ctx);
+    this.createPort(device, 45, 40, { name: "in", node: node1, input: 0 });
     this.createKnob(device, 70, 90, {
       name: "gain",
-      param: this.clampParam(node.gain, 0, maxGain),
+      param: this.clampParam(node1.gain, 0, 2),
     });
+
+    const node2 = new GainNode(this.ecs.audio.ctx);
+    this.createPort(device, 20, 90, { name: "out", node: node2, output: 0 });
+    this.createVCAGainButton(device, 30, 140, node2.gain, 2);
+    this.createVCAGainButton(device, 60, 140, node2.gain, 100);
+
+    node1.connect(node2, 0, 0);
+
     return device;
+  }
+
+  createVCAGainButton(
+    device: Entity,
+    x: number,
+    y: number,
+    param: AudioParam,
+    gain: number
+  ) {
+    const entity = this.ecs.createEntity("button");
+    const grabTarget: CPointerGrabTarget = {};
+    this.ecs.transforms.set(entity, {
+      parent: device,
+      x,
+      y,
+      w: 32,
+      h: 32,
+    });
+    this.ecs.pointerGrabTargets.set(entity, grabTarget);
+    let mouseDown = false;
+    const button = {
+      label: "x" + gain,
+      get down() {
+        return mouseDown || param.value === gain;
+      },
+      set down(down) {
+        mouseDown = down;
+      },
+      onClick: () => {
+        param.value = gain;
+      },
+    };
+    this.ecs.buttons.set(entity, button);
+    return entity;
   }
 
   createPanner() {
@@ -265,13 +307,7 @@ export class SPrefabs {
 
     this.createSpawnButton("LPF", () => this.createLPF(), nextPosition());
 
-    this.createSpawnButton("Gain x2", () => this.createGain(2), nextPosition());
-
-    this.createSpawnButton(
-      "Gain x100",
-      () => this.createGain(100),
-      nextPosition()
-    );
+    this.createSpawnButton("VCA", () => this.createVCA(), nextPosition());
 
     this.createSpawnButton("Panner", () => this.createPanner(), nextPosition());
 
