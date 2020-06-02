@@ -37,8 +37,8 @@ export class ECS {
 
   transforms = new EntityComponentMap<CTransform>();
   devices = new EntityComponentMap<CDevice>();
-  ports = new EntityComponentMap<CPort>();
-  knobs = new EntityComponentMap<CKnob>();
+  ports = new EntityComponentMap<CPort<AudioNode>>();
+  knobs = new EntityComponentMap<CKnob<AudioNode>>();
   wires = new EntityComponentMap<CWire>();
   pointers = new EntityComponentMap<CPointer>();
   pointerGrabTargets = new EntityComponentMap<CPointerGrabTarget>();

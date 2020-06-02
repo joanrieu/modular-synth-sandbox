@@ -21,11 +21,10 @@ export class SKnobRenderer extends AbstractRenderer {
       const { x, y, w, h } = this.ecs.display.getWorldTransform(entity);
       const r = Math.min(w, h) / 2;
 
-      const op = (x: number) =>
-        knob.param.maxValue > 1000 ? Math.log10(x) : x;
+      const op = (x: number) => (knob.max > 1000 ? Math.log10(x) : x);
       let value =
-        op(knob.param.value - knob.param.minValue) /
-        op(knob.param.maxValue - knob.param.minValue);
+        op(this.ecs.audio.getParamValue(knob.param) - knob.min) /
+        op(knob.max - knob.min);
       value = Math.max(0, Math.min(1, value));
       const valueAngle = valueToAngle(value);
 
@@ -56,7 +55,11 @@ export class SKnobRenderer extends AbstractRenderer {
         const d = 30;
 
         ctx.fillStyle = "white";
-        ctx.fillText(knob.param.value.toFixed(2), x + d, y + d);
+        ctx.fillText(
+          this.ecs.audio.getParamValue(knob.param).toFixed(2),
+          x + d,
+          y + d
+        );
       }
     }
   }

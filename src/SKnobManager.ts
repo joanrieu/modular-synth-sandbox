@@ -15,20 +15,20 @@ export class SKnobManager extends AbstractUpdater {
           target.grabbed.pointer
         );
 
-        const op = (x: number) =>
-          knob.param.maxValue > 1000 ? Math.log10(x) : x;
-        const opInv = (x: number) => (knob.param.maxValue > 1000 ? 10 ** x : x);
+        const op = (x: number) => (knob.max > 1000 ? Math.log10(x) : x);
+        const opInv = (x: number) => (knob.max > 1000 ? 10 ** x : x);
         if (dragZone) {
           let percent = (y - dragZone.minY) / (dragZone.maxY - dragZone.minY);
           percent = Math.max(0, Math.min(1, percent));
 
-          knob.param.value =
-            knob.param.minValue +
-            opInv(percent * op(knob.param.maxValue - knob.param.minValue));
+          this.ecs.audio.setParamValue(
+            knob.param,
+            knob.min + opInv(percent * op(knob.max - knob.min))
+          );
         } else {
           let percent =
-            op(knob.param.value - knob.param.minValue) /
-            op(knob.param.maxValue - knob.param.minValue);
+            op(this.ecs.audio.getParamValue(knob.param) - knob.min) /
+            op(knob.max - knob.min);
           percent = Math.max(0, Math.min(1, percent));
 
           const scale = 200;
