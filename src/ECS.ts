@@ -62,6 +62,6 @@ export class ECS {
   deviceRenderer = new SDeviceRenderer(this);
   portRenderer = new SPortRenderer(this);
   knobRenderer = new SKnobRenderer(this);
-  wireRenderer = new SWireRenderer(this);
   buttonRenderer = new SButtonRenderer(this);
+  wireRenderer = new SWireRenderer(this);
 }
