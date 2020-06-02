@@ -18,8 +18,9 @@ export class SScopeRenderer extends AbstractRenderer {
       ctx.scale(1, -1);
       ctx.fillRect(0, -transform.h / 2, transform.w, transform.h);
 
-      const buffer = new Float32Array(scope.node.frequencyBinCount);
-      scope.node.getFloatTimeDomainData(buffer);
+      const size = this.ecs.audio.getAnalyserFrequencyBinCount(scope.node);
+      const buffer = new Float32Array(size);
+      this.ecs.audio.getAnalyserFloatTimeDomainData(scope.node, buffer);
 
       const zx = buffer.findIndex((sample) => ((sample * 100) | 0) === 0);
       const ox = buffer.findIndex(

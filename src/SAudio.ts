@@ -35,6 +35,17 @@ export class SAudio {
     return id;
   }
 
+  getAnalyserFrequencyBinCount(nodeId: AudioNodeId<AnalyserNode>) {
+    return this.getNode(nodeId).frequencyBinCount;
+  }
+
+  getAnalyserFloatTimeDomainData(
+    nodeId: AudioNodeId<AnalyserNode>,
+    array: Float32Array
+  ) {
+    return this.getNode(nodeId).getFloatTimeDomainData(array);
+  }
+
   createBiquadFilterNode(options?: BiquadFilterOptions) {
     const id = this.nodes.size as AudioNodeId<BiquadFilterNode>;
     const node = new BiquadFilterNode(this.ctx, options);
