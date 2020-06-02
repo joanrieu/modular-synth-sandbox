@@ -128,15 +128,17 @@ export class SPrefabs {
 
     const node1 = new GainNode(this.ecs.audio.ctx);
     this.createPort(device, 45, 40, { name: "in", node: node1, input: 0 });
+    this.createPort(device, 20, 90, { name: "mod", param: node1.gain });
     this.createKnob(device, 70, 90, {
       name: "gain",
       param: this.clampParam(node1.gain, 0, 2),
     });
 
     const node2 = new GainNode(this.ecs.audio.ctx);
-    this.createPort(device, 20, 90, { name: "out", node: node2, output: 0 });
-    this.createVCAGainButton(device, 30, 140, node2.gain, 2);
-    this.createVCAGainButton(device, 60, 140, node2.gain, 100);
+    node2.gain.value = 2;
+    this.createPort(device, 45, 140, { name: "out", node: node2, output: 0 });
+    this.createVCAGainButton(device, 30, 190, node2.gain, 2);
+    this.createVCAGainButton(device, 60, 190, node2.gain, 100);
 
     node1.connect(node2, 0, 0);
 
