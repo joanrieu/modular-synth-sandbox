@@ -1,4 +1,8 @@
-export interface CKnob {
+import { AudioParamId } from "./SAudio";
+
+export interface CKnob<T extends AudioNode> {
   name: string;
-  param: AudioParam;
+  param: AudioParamId<T>;
+  min: number;
+  max: number;
 }

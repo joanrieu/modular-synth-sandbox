@@ -3,6 +3,7 @@ import { CPointerGrabTarget } from "./CPointerGrabTarget";
 import { CPort } from "./CPort";
 import { CTransform } from "./CTransform";
 import { ECS, Entity } from "./ECS";
+import { AudioNodeId, AudioParamId } from "./SAudio";
 
 export class SPrefabs {
   constructor(readonly ecs: ECS) {}
@@ -16,8 +17,7 @@ export class SPrefabs {
 
     this.createPort(device, 20, 40, {
       name: "spk",
-      node: this.ecs.audio.ctx.destination,
-      input: 0,
+      input: [this.ecs.audio.getMasterNode(), 0],
     });
 
     return device;
@@ -26,35 +26,37 @@ export class SPrefabs {
   createOscillator(audio = true) {
     const device = this.createDevice(audio ? "VCO" : "LFO");
 
-    const node = new OscillatorNode(this.ecs.audio.ctx, {
+    const node = this.ecs.audio.createOscillatorNode({
       frequency: audio ? 440 : 1,
     });
-    node.start();
 
     if (audio) {
-      const gainNode = new GainNode(this.ecs.audio.ctx, {
+      const gainNode = this.ecs.audio.createGainNode({
         gain:
           2 /* make up for division caused by the knob */ *
           55 /* convert CV to Hz */,
       });
-      gainNode.connect(node.frequency, 0);
+      this.ecs.audio.connect([gainNode, 0], [node, "frequency"]);
 
       this.createPort(device, 20, 40, {
         name: "freq",
-        node: gainNode,
-        input: 0,
+        input: [gainNode, 0],
       });
     }
 
     this.createKnob(device, 70, 40, {
       name: audio ? "freq" : "rate",
-      param: this.clampParam(node.frequency, 0, audio ? 20000 : 20),
+      param: [node, "frequency"],
+      min: 0,
+      max: audio ? 20000 : 20,
     });
 
     if (audio) {
       this.createKnob(device, 44, 90, {
         name: "dtn",
-        param: this.clampParam(node.detune, -100, 100),
+        param: [node, "detune"],
+        min: -100,
+        max: 100,
       });
     }
 
@@ -63,23 +65,25 @@ export class SPrefabs {
     this.createOscillatorWaveButton(device, node, "sawtooth", 2, audio);
     this.createOscillatorWaveButton(device, node, "square", 3, audio);
 
-    let outNode: AudioNode = node;
+    let outNode: AudioNodeId = node;
 
     if (!audio) {
-      const gainNode = new GainNode(this.ecs.audio.ctx, { gain: 50 });
-      outNode.connect(gainNode, 0);
+      const gainNode = this.ecs.audio.createGainNode({ gain: 50 });
+
+      this.ecs.audio.connect([outNode, 0], [gainNode, 0]);
       outNode = gainNode;
 
       this.createKnob(device, 20, 40, {
         name: "amp",
-        param: this.clampParam(gainNode.gain, 0, 100),
+        param: [gainNode, "gain"],
+        min: 0,
+        max: 100,
       });
     }
 
     this.createPort(device, 44, audio ? 240 : 190, {
       name: "out",
-      node: outNode,
-      output: 0,
+      output: [outNode, 0],
     });
 
     return device;
@@ -87,11 +91,12 @@ export class SPrefabs {
 
   createOscillatorWaveButton(
     device: Entity,
-    node: OscillatorNode,
+    node: AudioNodeId<OscillatorNode>,
     type: OscillatorType,
     line: number,
     audio: boolean
   ) {
+    const ecs = this.ecs;
     const button = this.ecs.createEntity("osc-waveform-" + type);
     this.ecs.transforms.set(button, {
       parent: device,
@@ -103,10 +108,10 @@ export class SPrefabs {
     this.ecs.buttons.set(button, {
       label: type,
       onClick: () => {
-        node.type = type;
+        ecs.audio.setOscillatorType(node, type);
       },
       get down() {
-        return node.type === type;
+        return ecs.audio.getOscillatorType(node) === type;
       },
       set down(down) {},
     });
@@ -115,31 +120,38 @@ export class SPrefabs {
 
   createLPF() {
     const device = this.createDevice("LPF");
-    const node = new BiquadFilterNode(this.ecs.audio.ctx);
-    this.createPort(device, 45, 40, { name: "in", node, input: 0 });
-    this.createPort(device, 20, 90, { name: "fm", param: node.frequency });
-    this.createKnob(device, 70, 90, { name: "freq", param: node.frequency });
-    this.createPort(device, 45, 140, { name: "out", node, output: 0 });
+    const node = this.ecs.audio.createBiquadFilterNode();
+    this.createPort(device, 45, 40, { name: "in", input: [node, 0] });
+    this.createPort(device, 20, 90, { name: "fm", input: [node, "frequency"] });
+    this.createKnob(device, 70, 90, {
+      name: "freq",
+      param: [node, "frequency"],
+      min: 0,
+      max: 20000,
+    });
+    this.createPort(device, 45, 140, { name: "out", output: [node, 0] });
     return device;
   }
 
   createVCA() {
     const device = this.createDevice("VCA");
 
-    const node1 = new GainNode(this.ecs.audio.ctx);
-    this.createPort(device, 45, 40, { name: "in", node: node1, input: 0 });
-    this.createPort(device, 20, 90, { name: "mod", param: node1.gain });
+    const node1 = this.ecs.audio.createGainNode();
+    this.createPort(device, 45, 40, { name: "in", input: [node1, 0] });
+    this.createPort(device, 20, 90, { name: "mod", input: [node1, "gain"] });
     this.createKnob(device, 70, 90, {
       name: "gain",
-      param: this.clampParam(node1.gain, 0, 2),
+      param: [node1, "gain"],
+      min: 0,
+      max: 2,
     });
 
-    const node2 = new GainNode(this.ecs.audio.ctx);
-    node2.gain.value = 1;
-    this.createPort(device, 20, 140, { name: "out", node: node2, output: 0 });
-    this.createVCAGainButton(device, 70, 140, node2.gain, 100);
+    const node2 = this.ecs.audio.createGainNode();
+    this.ecs.audio.setParamValue([node2, "gain"], 1);
+    this.createPort(device, 20, 140, { name: "out", output: [node2, 0] });
+    this.createVCAGainButton(device, 70, 140, [node2, "gain"], 100);
 
-    node1.connect(node2, 0, 0);
+    this.ecs.audio.connect([node1, 0], [node2, 0]);
 
     return device;
   }
@@ -148,9 +160,10 @@ export class SPrefabs {
     device: Entity,
     x: number,
     y: number,
-    param: AudioParam,
+    param: AudioParamId<GainNode>,
     gain: number
   ) {
+    const audio = this.ecs.audio;
     const entity = this.ecs.createEntity("button");
     const grabTarget: CPointerGrabTarget = {};
     this.ecs.transforms.set(entity, {
@@ -166,14 +179,14 @@ export class SPrefabs {
       label: "x" + gain,
       get down() {
         if ((new Error().stack || "").includes("SButtonRenderer"))
-          return mouseDown || param.value === gain;
+          return mouseDown || audio.getParamValue(param) === gain;
         return mouseDown;
       },
       set down(down) {
         mouseDown = down;
       },
       onClick: () => {
-        param.value = param.value === 1 ? gain : 1;
+        audio.setParamValue(param, audio.getParamValue(param) === 1 ? gain : 1);
       },
     };
     this.ecs.buttons.set(entity, button);
@@ -182,31 +195,40 @@ export class SPrefabs {
 
   createPanner() {
     const device = this.createDevice("Panner");
-    const node = new StereoPannerNode(this.ecs.audio.ctx);
-    this.createPort(device, 20, 40, { name: "in", node, input: 0 });
-    this.createKnob(device, 20, 90, { name: "pan", param: node.pan });
-    this.createPort(device, 20, 140, { name: "out", node, output: 0 });
+    const node = this.ecs.audio.createStereoPannerNode();
+    this.createPort(device, 20, 40, { name: "in", input: [node, 0] });
+    this.createKnob(device, 20, 90, {
+      name: "pan",
+      param: [node, "pan"],
+      min: -1,
+      max: 1,
+    });
+    this.createPort(device, 20, 140, { name: "out", output: [node, 0] });
     return device;
   }
 
   createDelay(maxDelayTime = 10) {
     const device = this.createDevice("Delay");
-    const node = new DelayNode(this.ecs.audio.ctx, { maxDelayTime });
-    this.createPort(device, 20, 40, { name: "in", node, input: 0 });
-    this.createKnob(device, 20, 90, { name: "val", param: node.delayTime });
-    this.createPort(device, 20, 140, { name: "out", node, output: 0 });
+    const node = this.ecs.audio.createDelayNode({ maxDelayTime });
+    this.createPort(device, 20, 40, { name: "in", input: [node, 0] });
+    this.createKnob(device, 20, 90, {
+      name: "val",
+      param: [node, "delayTime"],
+      min: 0,
+      max: maxDelayTime,
+    });
+    this.createPort(device, 20, 140, { name: "out", output: [node, 0] });
     return device;
   }
 
   createScope() {
     const device = this.createDevice("Scope");
     this.ecs.transforms.set(device, { x: 0, y: 0, w: 300, h: 200 });
-    const node = new AnalyserNode(this.ecs.audio.ctx);
+    const node = this.ecs.audio.createAnalyserNode();
     this.ecs.scopes.set(device, { node });
     this.createPort(device, 10, 10, {
       name: "in",
-      node,
-      input: 0,
+      input: [node, 0],
     });
     return device;
   }
@@ -244,7 +266,12 @@ export class SPrefabs {
     return entity;
   }
 
-  createPort(device: Entity, x: number, y: number, port: CPort) {
+  createPort<T extends AudioNode>(
+    device: Entity,
+    x: number,
+    y: number,
+    port: CPort<T>
+  ) {
     const entity = this.ecs.createEntity(
       device.description + "-" + port.name.toLowerCase()
     );
@@ -263,7 +290,12 @@ export class SPrefabs {
     return entity;
   }
 
-  createKnob(device: Entity, x: number, y: number, knob: CKnob) {
+  createKnob<T extends AudioNode>(
+    device: Entity,
+    x: number,
+    y: number,
+    knob: CKnob<T>
+  ) {
     const entity = this.ecs.createEntity(
       device.description + "-" + knob.name.toLowerCase()
     );

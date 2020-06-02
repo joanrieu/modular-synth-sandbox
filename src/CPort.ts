@@ -1,16 +1,13 @@
-type Base = {
-  name: string;
-  node: AudioNode;
-  input: number;
-  param: AudioParam;
-  output: number;
-};
+import { AudioParamId, AudioPortId } from "./SAudio";
 
-type Take<K extends keyof Base> = Pick<Base, K> &
-  Partial<Record<Exclude<keyof Base, K>, undefined>>;
-
-type NodeInput = Take<"name" | "node" | "input">;
-type Param = Take<"name" | "param">;
-type NodeOutput = Take<"name" | "node" | "output">;
-
-export type CPort = NodeInput | Param | NodeOutput;
+export type CPort<T extends AudioNode> =
+  | {
+      name: string;
+      input: AudioPortId<T> | AudioParamId<T>;
+      output?: undefined;
+    }
+  | {
+      name: string;
+      input?: undefined;
+      output: AudioPortId<T>;
+    };

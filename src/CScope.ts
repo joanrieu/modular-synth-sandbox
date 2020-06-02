@@ -1,3 +1,5 @@
+import { AudioNodeId } from "./SAudio";
+
 export interface CScope {
-  node: AnalyserNode;
+  node: AudioNodeId<AnalyserNode>;
 }
