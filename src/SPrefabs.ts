@@ -282,10 +282,7 @@ export class SPrefabs {
       w: 32,
       h: 32,
     });
-    this.ecs.ports.set(entity, {
-      name,
-      ...port,
-    });
+    this.ecs.ports.set(entity, port);
     this.ecs.pointerGrabTargets.set(entity, {});
     return entity;
   }
@@ -306,10 +303,7 @@ export class SPrefabs {
       w: 32,
       h: 32,
     });
-    this.ecs.knobs.set(entity, {
-      name,
-      ...knob,
-    });
+    this.ecs.knobs.set(entity, knob);
     this.ecs.pointerGrabTargets.set(entity, {});
     return entity;
   }

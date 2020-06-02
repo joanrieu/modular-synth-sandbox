@@ -7,7 +7,7 @@ export type AudioNodeId<T extends AudioNode = AudioNode> = number & {
 
 export type AudioParamId<T extends AudioNode = AudioNode> = [
   AudioNodeId<T>,
-  keyof T
+  string
 ];
 
 export type AudioPortId<T extends AudioNode = AudioNode> = [
@@ -107,9 +107,7 @@ export class SAudio {
     if (typeof dstPortOrParam === "number") {
       srcNode.connect(dstNode, srcPort, dstPortOrParam);
     } else {
-      const dstParam = dstNode[dstPortOrParam];
-      if (!(dstParam instanceof AudioParam))
-        throw new Error("invalid param name: " + dstPortOrParam);
+      const dstParam = this.getParam([dstId, dstPortOrParam]);
       srcNode.connect(dstParam, srcPort);
     }
   }
@@ -120,7 +118,8 @@ export class SAudio {
 
   private getParam<T extends AudioNode>([nodeId, paramName]: AudioParamId<T>) {
     const node = this.getNode(nodeId);
-    const param = node[paramName];
+    const key = paramName as keyof T;
+    const param = node[key];
     if (!(param instanceof AudioParam))
       throw new Error("invalid param name: " + paramName);
     return param;
