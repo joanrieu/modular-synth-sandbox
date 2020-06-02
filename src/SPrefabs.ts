@@ -135,10 +135,9 @@ export class SPrefabs {
     });
 
     const node2 = new GainNode(this.ecs.audio.ctx);
-    node2.gain.value = 2;
-    this.createPort(device, 45, 140, { name: "out", node: node2, output: 0 });
-    this.createVCAGainButton(device, 30, 190, node2.gain, 2);
-    this.createVCAGainButton(device, 60, 190, node2.gain, 100);
+    node2.gain.value = 1;
+    this.createPort(device, 20, 140, { name: "out", node: node2, output: 0 });
+    this.createVCAGainButton(device, 70, 140, node2.gain, 100);
 
     node1.connect(node2, 0, 0);
 
@@ -166,13 +165,15 @@ export class SPrefabs {
     const button = {
       label: "x" + gain,
       get down() {
-        return mouseDown || param.value === gain;
+        if ((new Error().stack || "").includes("SButtonRenderer"))
+          return mouseDown || param.value === gain;
+        return mouseDown;
       },
       set down(down) {
         mouseDown = down;
       },
       onClick: () => {
-        param.value = gain;
+        param.value = param.value === 1 ? gain : 1;
       },
     };
     this.ecs.buttons.set(entity, button);
