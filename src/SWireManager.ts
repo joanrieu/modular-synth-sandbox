@@ -80,24 +80,12 @@ export class SWireManager extends AbstractUpdater {
 
     if (
       sourcePort.output === undefined ||
-      (destinationPort.input === undefined &&
-        destinationPort.param === undefined)
+      destinationPort.input === undefined
     ) {
       return false;
     }
 
-    if (destinationPort.param) {
-      sourcePort.node[connect ? "connect" : "disconnect"](
-        destinationPort.param,
-        sourcePort.output
-      );
-    } else {
-      sourcePort.node[connect ? "connect" : "disconnect"](
-        destinationPort.node,
-        sourcePort.output,
-        destinationPort.input
-      );
-    }
+    this.ecs.audio.connect(sourcePort.output, destinationPort.input);
 
     return true;
   }
