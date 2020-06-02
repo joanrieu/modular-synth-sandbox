@@ -21,7 +21,7 @@ export class SAudio {
   private ctx = new AudioContext();
   private nodes = new Map<
     AudioNodeId,
-    [AudioNode, AudioNodeOptions | undefined]
+    [AudioNode, AudioNodeOptions | ConstantSourceOptions | undefined]
   >([[this.getMasterNode(), [this.ctx.destination, undefined]]]);
 
   getMasterNode() {
@@ -38,6 +38,14 @@ export class SAudio {
   createBiquadFilterNode(options?: BiquadFilterOptions) {
     const id = this.nodes.size as AudioNodeId<BiquadFilterNode>;
     const node = new BiquadFilterNode(this.ctx, options);
+    this.nodes.set(id, [node, options]);
+    return id;
+  }
+
+  createConstantSourceNode(options?: ConstantSourceOptions) {
+    const id = this.nodes.size as AudioNodeId<ConstantSourceNode>;
+    const node = new ConstantSourceNode(this.ctx, options);
+    node.start();
     this.nodes.set(id, [node, options]);
     return id;
   }

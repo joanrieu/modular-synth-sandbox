@@ -27,39 +27,35 @@ export class SMidiIO {
       h: 90,
     });
 
-    const gateNode = new ConstantSourceNode(this.ecs.audio.ctx, {
+    const gateNode = this.ecs.audio.createConstantSourceNode({
       offset: 0,
     });
-    gateNode.start();
     this.ecs.prefabs.createPort(device, (width - 32) / 2 - 25, 40, {
       name: "gate",
-      node: gateNode,
-      output: 0,
+      output: [gateNode, 0],
     });
 
     let lastNote = 440;
-    const cvNode = new ConstantSourceNode(this.ecs.audio.ctx, {
+    const cvNode = this.ecs.audio.createConstantSourceNode({
       offset: lastNote,
     });
-    cvNode.start();
     this.ecs.prefabs.createPort(device, (width - 32) / 2 + 25, 40, {
       name: "cv",
-      node: cvNode,
-      output: 0,
+      output: [cvNode, 0],
     });
 
     port.addEventListener("midimessage", (e) => {
       const [command, note, velocity] = e.data;
       if (command === MidiB0.NOTE_ON && velocity !== 0) {
-        gateNode.offset.value = 1;
-        cvNode.offset.value = this.noteToCV(note);
+        this.ecs.audio.setParamValue([cvNode, "offset"], this.noteToCV(note));
+        this.ecs.audio.setParamValue([gateNode, "offset"], 1);
         lastNote = note;
       } else if (
         command === MidiB0.NOTE_OFF ||
         (command === MidiB0.NOTE_ON && velocity === 0)
       ) {
         if (note === lastNote) {
-          gateNode.offset.value = 0;
+          this.ecs.audio.setParamValue([gateNode, "offset"], 0);
         }
       }
     });
