@@ -27,7 +27,15 @@ type SerializedAudioConnections = string[];
 type SerializedAudio = [SerializedAudioNodeMap, SerializedAudioConnections];
 
 export class SAudio implements ISerializable<SerializedAudio> {
-  constructor(private readonly ecs: ECS) {}
+  constructor(private readonly ecs: ECS) {
+    const interval = setInterval(() => {
+      if (this.ctx.state === "running") {
+        clearInterval(interval);
+      } else {
+        this.ctx.resume();
+      }
+    }, 400);
+  }
 
   private ctx = new AudioContext();
   private nodes = new Map<AudioNodeId, [AudioNode, any]>([
