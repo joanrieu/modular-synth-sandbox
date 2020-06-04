@@ -18,7 +18,7 @@ import { SDisplay } from "./SDisplay";
 import { SDragAndDrop } from "./SDragAndDrop";
 import { SKnobManager } from "./SKnobManager";
 import { SKnobRenderer } from "./SKnobRenderer";
-import { SMidiIO } from "./SMidiIO";
+import { SMidi } from "./SMidi";
 import { SMouseInput } from "./SMouseInput";
 import { SPointerGrabber } from "./SPointerGrabber";
 import { SPortRenderer } from "./SPortRenderer";
@@ -58,7 +58,7 @@ export class ECS {
   deviceSaver = new SDeviceSaver(this);
   wireManager = new SWireManager(this);
   knobManager = new SKnobManager(this);
-  midiIO = new SMidiIO(this);
+  midi = new SMidi(this);
   autosave = new SAutosave(this);
   // debugRenderer = new SDebugRenderer(this);
   scopeRenderer = new SScopeRenderer(this);

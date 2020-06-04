@@ -252,6 +252,24 @@ export class SPrefabs {
     return device;
   }
 
+  createMIDI() {
+    const device = this.createDevice("MIDI in");
+
+    const gateNode = this.ecs.midi.createGateNode();
+    this.ecs.prefabs.createPort(device, 20, 40, {
+      name: "gate",
+      output: [gateNode, 0],
+    });
+
+    const cvNode = this.ecs.midi.createCVNode();
+    this.ecs.prefabs.createPort(device, 70, 40, {
+      name: "cv",
+      output: [cvNode, 0],
+    });
+
+    return device;
+  }
+
   createDevice(name: string) {
     const getContentBox = this.getContentBox;
     const entity = this.ecs.createEntity(name.toLowerCase());
@@ -328,6 +346,7 @@ export class SPrefabs {
     });
 
     this.createSpawnButton("Master", nextPosition());
+    this.createSpawnButton("MIDI", nextPosition());
     this.createSpawnButton("VCO", nextPosition());
     this.createSpawnButton("LFO", nextPosition());
     this.createSpawnButton("LPF", nextPosition());
