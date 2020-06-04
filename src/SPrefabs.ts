@@ -344,15 +344,19 @@ export class SPrefabs {
     });
 
     this.createNewProjectButton(nextPosition());
-    nextPosition();
+    spot += 0.5;
     this.createSpawnButton("Master", nextPosition());
     this.createSpawnButton("MIDI", nextPosition());
+    spot += 0.5;
     this.createSpawnButton("VCO", nextPosition());
     this.createSpawnButton("LFO", nextPosition());
+    spot += 0.5;
     this.createSpawnButton("LPF", nextPosition());
-    this.createSpawnButton("VCA", nextPosition());
-    this.createSpawnButton("Panner", nextPosition());
     this.createSpawnButton("Delay", nextPosition());
+    this.createSpawnButton("Panner", nextPosition());
+    spot += 0.5;
+    this.createSpawnButton("VCA", nextPosition());
+    spot += 0.5;
     this.createSpawnButton("Scope", nextPosition());
   }
 
