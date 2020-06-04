@@ -85,7 +85,7 @@ export class SWireManager extends AbstractUpdater {
       return false;
     }
 
-    this.ecs.audio.connect(sourcePort.output, destinationPort.input);
+    this.ecs.audio.connect(sourcePort.output, destinationPort.input, connect);
 
     return true;
   }

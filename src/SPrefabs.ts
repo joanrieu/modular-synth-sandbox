@@ -23,14 +23,14 @@ export class SPrefabs {
     return device;
   }
 
-  createOscillator(audio = true) {
-    const device = this.createDevice(audio ? "VCO" : "LFO");
+  createOscillator(audioRange: boolean) {
+    const device = this.createDevice(audioRange ? "VCO" : "LFO");
 
     const node = this.ecs.audio.createOscillatorNode({
-      frequency: audio ? 440 : 1,
+      frequency: audioRange ? 440 : 1,
     });
 
-    if (audio) {
+    if (audioRange) {
       const gainNode = this.ecs.audio.createGainNode({
         gain:
           2 /* make up for division caused by the knob */ *
@@ -45,13 +45,13 @@ export class SPrefabs {
     }
 
     this.createKnob(device, 70, 40, {
-      name: audio ? "freq" : "rate",
+      name: audioRange ? "freq" : "rate",
       param: [node, "frequency"],
-      min: 0,
-      max: audio ? 20000 : 20,
+      min: audioRange ? 20 : 0,
+      max: audioRange ? 20000 : 20,
     });
 
-    if (audio) {
+    if (audioRange) {
       this.createKnob(device, 44, 90, {
         name: "dtn",
         param: [node, "detune"],
@@ -60,14 +60,14 @@ export class SPrefabs {
       });
     }
 
-    this.createOscillatorWaveButton(device, node, "sine", 0, audio);
-    this.createOscillatorWaveButton(device, node, "triangle", 1, audio);
-    this.createOscillatorWaveButton(device, node, "sawtooth", 2, audio);
-    this.createOscillatorWaveButton(device, node, "square", 3, audio);
+    this.createOscillatorWaveButton(device, node, "sine", 0, audioRange);
+    this.createOscillatorWaveButton(device, node, "triangle", 1, audioRange);
+    this.createOscillatorWaveButton(device, node, "sawtooth", 2, audioRange);
+    this.createOscillatorWaveButton(device, node, "square", 3, audioRange);
 
     let outNode: AudioNodeId = node;
 
-    if (!audio) {
+    if (!audioRange) {
       const gainNode = this.ecs.audio.createGainNode({ gain: 50 });
 
       this.ecs.audio.connect([outNode, 0], [gainNode, 0]);
@@ -81,7 +81,7 @@ export class SPrefabs {
       });
     }
 
-    this.createPort(device, 44, audio ? 240 : 190, {
+    this.createPort(device, 44, audioRange ? 240 : 190, {
       name: "out",
       output: [outNode, 0],
     });
@@ -96,7 +96,6 @@ export class SPrefabs {
     line: number,
     audio: boolean
   ) {
-    const ecs = this.ecs;
     const button = this.ecs.createEntity("osc-waveform-" + type);
     this.ecs.transforms.set(button, {
       parent: device,
@@ -107,15 +106,39 @@ export class SPrefabs {
     });
     this.ecs.buttons.set(button, {
       label: type,
-      onClick: () => {
-        ecs.audio.setOscillatorType(node, type);
-      },
-      get down() {
-        return ecs.audio.getOscillatorType(node) === type;
-      },
-      set down(down) {},
+      toggle: true,
+      down: type === "sine",
+      onClick: [
+        "prefabs",
+        this.onOscillatorWaveButtonClick.name,
+        [device, node, type],
+      ],
     });
     this.ecs.pointerGrabTargets.set(button, {});
+  }
+
+  onOscillatorWaveButtonClick(
+    device: Entity,
+    node: AudioNodeId<OscillatorNode>,
+    type: OscillatorType
+  ) {
+    this.ecs.audio.setOscillatorType(node, type);
+    for (const [entity, transform] of this.ecs.transforms) {
+      if (transform.parent === device && this.ecs.buttons.has(entity)) {
+        const button = this.ecs.buttons.get(entity)!;
+        if (button.label !== type) {
+          button.down = false;
+        }
+      }
+    }
+  }
+
+  createVCO() {
+    return this.createOscillator(true);
+  }
+
+  createLFO() {
+    return this.createOscillator(false);
   }
 
   createLPF() {
@@ -163,7 +186,6 @@ export class SPrefabs {
     param: AudioParamId<GainNode>,
     gain: number
   ) {
-    const audio = this.ecs.audio;
     const entity = this.ecs.createEntity("button");
     const grabTarget: CPointerGrabTarget = {};
     this.ecs.transforms.set(entity, {
@@ -174,23 +196,20 @@ export class SPrefabs {
       h: 32,
     });
     this.ecs.pointerGrabTargets.set(entity, grabTarget);
-    let mouseDown = false;
-    const button = {
+    this.ecs.buttons.set(entity, {
       label: "x" + gain,
-      get down() {
-        if ((new Error().stack || "").includes("SButtonRenderer"))
-          return mouseDown || audio.getParamValue(param) === gain;
-        return mouseDown;
-      },
-      set down(down) {
-        mouseDown = down;
-      },
-      onClick: () => {
-        audio.setParamValue(param, audio.getParamValue(param) === 1 ? gain : 1);
-      },
-    };
-    this.ecs.buttons.set(entity, button);
+      toggle: true,
+      down: false,
+      onClick: ["prefabs", this.onVCAGainButtonClick.name, [param, gain]],
+    });
     return entity;
+  }
+
+  onVCAGainButtonClick(param: AudioParamId, gain: number) {
+    this.ecs.audio.setParamValue(
+      param,
+      this.ecs.audio.getParamValue(param) === 1 ? gain : 1
+    );
   }
 
   createPanner() {
@@ -233,20 +252,6 @@ export class SPrefabs {
     return device;
   }
 
-  clampParam(param: AudioParam, minValue: number, maxValue: number) {
-    return new Proxy(param, {
-      get(target, p) {
-        if (p === "minValue") return minValue;
-        if (p === "maxValue") return maxValue;
-        return (target as any)[p];
-      },
-      set(target, p, value) {
-        (target as any)[p] = value;
-        return true;
-      },
-    });
-  }
-
   createDevice(name: string) {
     const getContentBox = this.getContentBox;
     const entity = this.ecs.createEntity(name.toLowerCase());
@@ -254,6 +259,8 @@ export class SPrefabs {
     this.ecs.transforms.set(entity, {
       x: 0,
       y: 0,
+      // FIXME the getters are replaced by their values when serialized
+      // (it works, but it could cause problems in the future)
       get w() {
         return getContentBox(entity, "w");
       },
@@ -273,7 +280,7 @@ export class SPrefabs {
     port: CPort<T>
   ) {
     const entity = this.ecs.createEntity(
-      device.description + "-" + port.name.toLowerCase()
+      device + "-" + port.name.toLowerCase()
     );
     this.ecs.transforms.set(entity, {
       parent: device,
@@ -294,7 +301,7 @@ export class SPrefabs {
     knob: CKnob<T>
   ) {
     const entity = this.ecs.createEntity(
-      device.description + "-" + knob.name.toLowerCase()
+      device + "-" + knob.name.toLowerCase()
     );
     this.ecs.transforms.set(entity, {
       parent: device,
@@ -320,51 +327,43 @@ export class SPrefabs {
       h: 20,
     });
 
-    this.createSpawnButton("Master", () => this.createMaster(), nextPosition());
-
-    this.createSpawnButton(
-      "VCO",
-      () => this.createOscillator(),
-      nextPosition()
-    );
-
-    this.createSpawnButton(
-      "LFO",
-      () => this.createOscillator(false),
-      nextPosition()
-    );
-
-    this.createSpawnButton("LPF", () => this.createLPF(), nextPosition());
-
-    this.createSpawnButton("VCA", () => this.createVCA(), nextPosition());
-
-    this.createSpawnButton("Panner", () => this.createPanner(), nextPosition());
-
-    this.createSpawnButton("Delay", () => this.createDelay(), nextPosition());
-
-    this.createSpawnButton("Scope", () => this.createScope(), nextPosition());
+    this.createSpawnButton("Master", nextPosition());
+    this.createSpawnButton("VCO", nextPosition());
+    this.createSpawnButton("LFO", nextPosition());
+    this.createSpawnButton("LPF", nextPosition());
+    this.createSpawnButton("VCA", nextPosition());
+    this.createSpawnButton("Panner", nextPosition());
+    this.createSpawnButton("Delay", nextPosition());
+    this.createSpawnButton("Scope", nextPosition());
   }
 
-  createSpawnButton(name: string, spawn: () => Entity, transform: CTransform) {
+  createSpawnButton(name: string, transform: CTransform) {
     const entity = this.ecs.createEntity("button");
     const grabTarget: CPointerGrabTarget = {};
     this.ecs.transforms.set(entity, transform);
     this.ecs.pointerGrabTargets.set(entity, grabTarget);
     this.ecs.buttons.set(entity, {
       label: name,
+      toggle: false,
       down: false,
-      onClick: () => {
-        const entity = spawn();
-        const transform = this.ecs.transforms.get(entity)!;
-        this.ecs.pointerGrabTargets.get(entity)!.grabbed = {
-          pointer: grabTarget.grabbed!.pointer,
-          dx: -transform.w / 2,
-          dy: -transform.h / 4,
-        };
-        delete grabTarget.grabbed;
-      },
+      onClick: ["prefabs", this.onSpawnButtonClick.name, [entity, name]],
     });
     return entity;
+  }
+
+  onSpawnButtonClick(entity: Entity, type: string) {
+    const key = ("create" + type) as keyof this;
+    const spawn = ((this[key] as unknown) as () => Entity).bind(this);
+    const spawnedEntity = spawn();
+    const transform = this.ecs.transforms.get(spawnedEntity)!;
+    const buttonGrabTarget = this.ecs.pointerGrabTargets.get(entity)!;
+    const spawnedGrabTarget = this.ecs.pointerGrabTargets.get(spawnedEntity)!;
+    spawnedGrabTarget.grabbed = {
+      pointer: buttonGrabTarget.grabbed!.pointer,
+      dx: -transform.w / 2,
+      dy: -transform.h / 4,
+    };
+    delete buttonGrabTarget.grabbed;
   }
 
   getContentBox = (entity: Entity, size: "w" | "h") => {

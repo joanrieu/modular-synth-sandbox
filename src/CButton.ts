@@ -1,7 +1,8 @@
-import { Entity } from "./ECS";
+import { ECS } from "./ECS";
 
 export interface CButton {
   label: string;
+  toggle: boolean;
   down: boolean;
-  onClick: () => void;
+  onClick: [keyof ECS, string, any[]];
 }
