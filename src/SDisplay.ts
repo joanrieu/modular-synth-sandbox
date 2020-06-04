@@ -1,6 +1,6 @@
-import { AbstractRenderer } from "./AbstractRenderer";
-import { AbstractUpdater } from "./AbstractUpdater";
 import { ECS, Entity } from "./ECS";
+import { IRenderable } from "./IRenderable";
+import { IUpdatable } from "./IUpdatable";
 
 export class SDisplay {
   canvas = document.createElement("canvas");
@@ -20,19 +20,19 @@ export class SDisplay {
 
   loop = () => {
     this.update();
-    this.draw();
+    this.render();
     requestAnimationFrame(this.loop);
   };
 
   update() {
     for (const system of Object.values(this.ecs)) {
-      if (system instanceof AbstractUpdater) {
-        system.update();
+      if ("update" in system && system !== this) {
+        (system as IUpdatable).update();
       }
     }
   }
 
-  draw() {
+  render() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.ctx.textAlign = "center";
@@ -56,8 +56,8 @@ export class SDisplay {
     );
 
     for (const system of Object.values(this.ecs)) {
-      if (system instanceof AbstractRenderer) {
-        system.draw();
+      if ("render" in system && system !== this) {
+        (system as IRenderable).render();
       }
     }
   }

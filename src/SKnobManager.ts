@@ -1,10 +1,8 @@
-import { AbstractUpdater } from "./AbstractUpdater";
 import { ECS } from "./ECS";
+import { IUpdatable } from "./IUpdatable";
 
-export class SKnobManager extends AbstractUpdater {
-  constructor(readonly ecs: ECS) {
-    super();
-  }
+export class SKnobManager implements IUpdatable {
+  constructor(readonly ecs: ECS) {}
 
   update() {
     for (const [entity, knob] of this.ecs.knobs) {

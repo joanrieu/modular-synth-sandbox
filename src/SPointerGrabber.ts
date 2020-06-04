@@ -1,10 +1,8 @@
-import { AbstractUpdater } from "./AbstractUpdater";
 import { ECS, Entity } from "./ECS";
+import { IUpdatable } from "./IUpdatable";
 
-export class SPointerGrabber extends AbstractUpdater {
-  constructor(readonly ecs: ECS) {
-    super();
-  }
+export class SPointerGrabber implements IUpdatable {
+  constructor(readonly ecs: ECS) {}
 
   dummyGrabTargets = new Set<Entity>();
 

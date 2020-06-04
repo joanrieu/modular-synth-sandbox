@@ -1,12 +1,10 @@
-import { AbstractRenderer } from "./AbstractRenderer";
 import { ECS } from "./ECS";
+import { IRenderable } from "./IRenderable";
 
-export class SButtonRenderer extends AbstractRenderer {
-  constructor(readonly ecs: ECS) {
-    super();
-  }
+export class SButtonRenderer implements IRenderable {
+  constructor(readonly ecs: ECS) {}
 
-  draw() {
+  render() {
     const ctx = this.ecs.display.ctx;
     ctx.lineWidth = 2;
     ctx.textAlign = "center";

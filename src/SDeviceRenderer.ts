@@ -1,12 +1,10 @@
-import { AbstractRenderer } from "./AbstractRenderer";
 import { ECS } from "./ECS";
+import { IRenderable } from "./IRenderable";
 
-export class SDeviceRenderer extends AbstractRenderer {
-  constructor(readonly ecs: ECS) {
-    super();
-  }
+export class SDeviceRenderer implements IRenderable {
+  constructor(readonly ecs: ECS) {}
 
-  draw() {
+  render() {
     const ctx = this.ecs.display.ctx;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";

@@ -1,11 +1,9 @@
-import { AbstractUpdater } from "./AbstractUpdater";
 import { CWire } from "./CWire";
 import { ECS, Entity } from "./ECS";
+import { IUpdatable } from "./IUpdatable";
 
-export class SWireManager extends AbstractUpdater {
-  constructor(readonly ecs: ECS) {
-    super();
-  }
+export class SWireManager implements IUpdatable {
+  constructor(readonly ecs: ECS) {}
 
   update() {
     for (const [grabbedEntity, grabTarget] of this.ecs.pointerGrabTargets) {

@@ -1,10 +1,8 @@
-import { AbstractUpdater } from "./AbstractUpdater";
 import { ECS } from "./ECS";
+import { IUpdatable } from "./IUpdatable";
 
-export class SDragAndDrop extends AbstractUpdater {
-  constructor(readonly ecs: ECS) {
-    super();
-  }
+export class SDragAndDrop implements IUpdatable {
+  constructor(readonly ecs: ECS) {}
 
   update() {
     for (const entity of this.ecs.dragAndDropTargets) {

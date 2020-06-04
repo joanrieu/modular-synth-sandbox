@@ -1,12 +1,10 @@
-import { AbstractRenderer } from "./AbstractRenderer";
 import { ECS, EntityComponentMap } from "./ECS";
+import { IRenderable } from "./IRenderable";
 
-export class SDebugRenderer extends AbstractRenderer {
-  constructor(readonly ecs: ECS) {
-    super();
-  }
+export class SDebugRenderer implements IRenderable {
+  constructor(readonly ecs: ECS) {}
 
-  draw() {
+  render() {
     const ctx = this.ecs.display.ctx;
     ctx.fillStyle = "white";
     ctx.strokeStyle = "grey";

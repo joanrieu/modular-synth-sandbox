@@ -1,10 +1,8 @@
-import { AbstractUpdater } from "./AbstractUpdater";
 import { ECS, Entity } from "./ECS";
+import { IUpdatable } from "./IUpdatable";
 
-export class SButtonClicker extends AbstractUpdater {
-  constructor(readonly ecs: ECS) {
-    super();
-  }
+export class SButtonClicker implements IUpdatable {
+  constructor(readonly ecs: ECS) {}
 
   held = new Set<Entity>();
 
