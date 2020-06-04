@@ -6,9 +6,7 @@ import { ECS, Entity } from "./ECS";
 import { AudioNodeId, AudioParamId } from "./SAudio";
 
 export class SPrefabs {
-  constructor(readonly ecs: ECS) {}
-
-  createScene() {
+  constructor(readonly ecs: ECS) {
     this.createToolbar();
   }
 
@@ -345,6 +343,8 @@ export class SPrefabs {
       h: 20,
     });
 
+    this.createNewProjectButton(nextPosition());
+    nextPosition();
     this.createSpawnButton("Master", nextPosition());
     this.createSpawnButton("MIDI", nextPosition());
     this.createSpawnButton("VCO", nextPosition());
@@ -356,11 +356,28 @@ export class SPrefabs {
     this.createSpawnButton("Scope", nextPosition());
   }
 
+  createNewProjectButton(transform: CTransform) {
+    const entity = this.ecs.createEntity("button");
+    this.ecs.transforms.set(entity, transform);
+    this.ecs.pointerGrabTargets.set(entity, {});
+    this.ecs.buttons.set(entity, {
+      label: "New Project",
+      toggle: false,
+      down: false,
+      onClick: ["prefabs", this.onNewProjectButtonClick.name, []],
+    });
+    return entity;
+  }
+
+  onNewProjectButtonClick() {
+    localStorage.clear();
+    location.reload();
+  }
+
   createSpawnButton(name: string, transform: CTransform) {
     const entity = this.ecs.createEntity("button");
-    const grabTarget: CPointerGrabTarget = {};
     this.ecs.transforms.set(entity, transform);
-    this.ecs.pointerGrabTargets.set(entity, grabTarget);
+    this.ecs.pointerGrabTargets.set(entity, {});
     this.ecs.buttons.set(entity, {
       label: name,
       toggle: false,
