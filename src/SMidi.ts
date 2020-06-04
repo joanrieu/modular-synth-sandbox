@@ -12,12 +12,22 @@ type SerializedMidiNodes = [
   AudioNodeId<ConstantSourceNode>
 ];
 
+function isMidiInput(port: WebMidi.MIDIPort): port is WebMidi.MIDIInput {
+  return port.type === "input";
+}
+
 export class SMidi implements ISerializable<SerializedMidiNodes> {
   constructor(readonly ecs: ECS) {
+    this.onMidiMessage = this.onMidiMessage.bind(this);
     navigator.requestMIDIAccess?.().then((midi) => {
       for (const port of midi.inputs.values()) {
-        port.addEventListener("midimessage", this.onMidiMessage.bind(this));
+        port.addEventListener("midimessage", this.onMidiMessage);
       }
+      midi.addEventListener("statechange", (event) => {
+        if (event.port.state === "connected" && isMidiInput(event.port)) {
+          event.port.addEventListener("midimessage", this.onMidiMessage);
+        }
+      });
     });
   }
 
