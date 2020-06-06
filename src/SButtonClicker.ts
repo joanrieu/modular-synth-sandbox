@@ -27,15 +27,6 @@ export class SButtonClicker implements IUpdatable {
           button.down = false;
         }
       }
-      // const clicked = grabTarget.grabbed && !button.down;
-      // button.down = Boolean(grabTarget.grabbed);
-      // if (clicked) {
-      //   const [system, method, args] = button.onclick;
-      //   ((this.ecs[system] as unknown) as record<
-      //     string,
-      //     (...args: any) => void
-      //   >)[method as keyof typeof system](...args);
-      // }
     }
   }
 }
