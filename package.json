@@ -13,5 +13,8 @@
   },
   "dependencies": {
     "@types/webmidi": "^2.0.4"
-  }
+  },
+  "browserslist": [
+    "last 1 Chrome version"
+  ]
 }

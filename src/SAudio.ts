@@ -1,4 +1,4 @@
-import { ECS } from "./ECS";
+import { ECS, SystemCallback } from "./ECS";
 import { ISerializable } from "./ISerializable";
 
 export type AudioNodeId<T extends AudioNode = AudioNode> = number & {
@@ -37,11 +37,16 @@ export class SAudio implements ISerializable<SerializedAudio> {
     }, 400);
   }
 
-  private ctx = new AudioContext();
+  ctx = new AudioContext();
+
   private nodes = new Map<AudioNodeId, [AudioNode, any]>([
     [this.getMasterNode(), [this.ctx.destination, {}]],
   ]);
   private connections = new Set<string>();
+
+  get sampleRate() {
+    return this.ctx.sampleRate;
+  }
 
   getMasterNode() {
     return 0 as AudioNodeId<AudioDestinationNode>;
@@ -115,6 +120,15 @@ export class SAudio implements ISerializable<SerializedAudio> {
     const id = this.nodes.size as AudioNodeId<StereoPannerNode>;
     const node = new StereoPannerNode(this.ctx, options);
     this.nodes.set(id, [node, options || {}]);
+    return id;
+  }
+
+  createConvolverNode(createBuffer: SystemCallback<AudioBuffer>) {
+    const id = this.nodes.size as AudioNodeId<StereoPannerNode>;
+    const node = new ConvolverNode(this.ctx);
+    const buffer = this.ecs.invokeCallback(createBuffer);
+    Promise.resolve(buffer).then((buffer) => (node.buffer = buffer));
+    this.nodes.set(id, [node, createBuffer]);
     return id;
   }
 

@@ -223,6 +223,26 @@ export class SPrefabs {
     return device;
   }
 
+  createReverb() {
+    const device = this.createDevice("Reverb");
+    const node = this.ecs.audio.createConvolverNode([
+      "prefabs",
+      this.createReverbArray.name,
+      [],
+    ]);
+    this.createPort(device, 20, 40, { name: "in", input: [node, 0] });
+    this.createPort(device, 20, 90, { name: "out", output: [node, 0] });
+    return device;
+  }
+
+  async createReverbArray() {
+    const el = document.getElementsByTagName("audio")[0] as HTMLAudioElement;
+    const res = await fetch(el.src);
+    const arrayBuffer = await res.arrayBuffer();
+    const audioBuffer = await this.ecs.audio.ctx.decodeAudioData(arrayBuffer);
+    return audioBuffer;
+  }
+
   createDelay(maxDelayTime = 10) {
     const device = this.createDevice("Delay");
     const node = this.ecs.audio.createDelayNode({ maxDelayTime });
@@ -353,6 +373,7 @@ export class SPrefabs {
     this.createSpawnButton("LPF", nextPosition());
     this.createSpawnButton("Delay", nextPosition());
     this.createSpawnButton("Panner", nextPosition());
+    this.createSpawnButton("Reverb", nextPosition());
     spot += 0.5;
     this.createSpawnButton("VCA", nextPosition());
     spot += 0.5;
