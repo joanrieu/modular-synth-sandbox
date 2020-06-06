@@ -30,9 +30,7 @@ export class SPrefabs {
 
     if (audioRange) {
       const gainNode = this.ecs.audio.createGainNode({
-        gain:
-          2 /* make up for division caused by the knob */ *
-          55 /* convert CV to Hz */,
+        gain: 55 /* convert CV to Hz */,
       });
       this.ecs.audio.connect([gainNode, 0], [node, "frequency"]);
 
