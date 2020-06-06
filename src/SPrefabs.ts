@@ -25,7 +25,7 @@ export class SPrefabs {
     const device = this.createDevice(audioRange ? "VCO" : "LFO");
 
     const node = this.ecs.audio.createOscillatorNode({
-      frequency: audioRange ? 440 : 1,
+      frequency: 0,
     });
 
     if (audioRange) {
@@ -42,26 +42,26 @@ export class SPrefabs {
       });
     }
 
-    this.createKnob(device, 70, 40, {
-      name: audioRange ? "freq" : "rate",
-      param: [node, "frequency"],
-      min: audioRange ? 20 : 0,
-      max: audioRange ? 20000 : 20,
-    });
-
     if (audioRange) {
-      this.createKnob(device, 44, 90, {
+      this.createKnob(device, 70, 40, {
         name: "dtn",
         param: [node, "detune"],
         min: -100,
         max: 100,
       });
+    } else {
+      this.createKnob(device, 70, 40, {
+        name: "rate",
+        param: [node, "frequency"],
+        min: 0,
+        max: 20,
+      });
     }
 
-    this.createOscillatorWaveButton(device, node, "sine", 0, audioRange);
-    this.createOscillatorWaveButton(device, node, "triangle", 1, audioRange);
-    this.createOscillatorWaveButton(device, node, "sawtooth", 2, audioRange);
-    this.createOscillatorWaveButton(device, node, "square", 3, audioRange);
+    this.createOscillatorWaveButton(device, node, "sine", 0);
+    this.createOscillatorWaveButton(device, node, "triangle", 1);
+    this.createOscillatorWaveButton(device, node, "sawtooth", 2);
+    this.createOscillatorWaveButton(device, node, "square", 3);
 
     let outNode: AudioNodeId = node;
 
@@ -79,7 +79,7 @@ export class SPrefabs {
       });
     }
 
-    this.createPort(device, 44, audioRange ? 240 : 190, {
+    this.createPort(device, 44, 190, {
       name: "out",
       output: [outNode, 0],
     });
@@ -91,14 +91,13 @@ export class SPrefabs {
     device: Entity,
     node: AudioNodeId<OscillatorNode>,
     type: OscillatorType,
-    line: number,
-    audio: boolean
+    line: number
   ) {
     const button = this.ecs.createEntity("osc-waveform-" + type);
     this.ecs.transforms.set(button, {
       parent: device,
       x: 20,
-      y: (audio ? 140 : 90) + 19 * line,
+      y: 90 + 19 * line,
       w: 80,
       h: 20,
     });
