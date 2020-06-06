@@ -16,11 +16,7 @@ export class SButtonClicker implements IUpdatable {
         } else {
           button.down = true;
         }
-        const [system, method, args] = button.onClick;
-        ((this.ecs[system] as unknown) as Record<
-          string,
-          (...args: any) => void
-        >)[method as keyof typeof system](...args);
+        this.ecs.invokeCallback(button.onClick);
       } else if (!grabTarget.grabbed && this.held.has(entity)) {
         this.held.delete(entity);
         if (!button.toggle) {

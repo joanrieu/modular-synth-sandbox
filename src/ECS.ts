@@ -30,10 +30,17 @@ import { SWireRenderer } from "./SWireRenderer";
 export type Entity = string & { __tag: "Entity" };
 export class EntitySet extends Set<Entity> {}
 export class EntityComponentMap<C> extends Map<Entity, C> {}
+export type SystemCallback<T = unknown> = [keyof ECS, string, any[]];
 
 export class ECS {
   createEntity(name: string) {
     return (name + "-" + Math.random().toString(16).slice(2, 6)) as Entity;
+  }
+
+  invokeCallback<T>([systemName, methodName, args]: SystemCallback<T>): T {
+    const system = this[systemName];
+    const method = system[methodName as keyof typeof system] as Function;
+    return method.apply(system, args);
   }
 
   transforms = new EntityComponentMap<CTransform>();
