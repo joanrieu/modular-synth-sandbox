@@ -35,14 +35,14 @@ export class SMidi implements ISerializable<SerializedMidiNodes> {
   gateNode?: AudioNodeId<ConstantSourceNode>;
   cvNode?: AudioNodeId<ConstantSourceNode>;
 
-  createGateNode() {
+  getGateNode() {
     if (!this.gateNode) {
       this.gateNode = this.ecs.audio.createConstantSourceNode();
     }
     return this.gateNode;
   }
 
-  createCVNode() {
+  getCVNode() {
     if (!this.cvNode) {
       this.cvNode = this.ecs.audio.createConstantSourceNode();
     }
@@ -50,8 +50,8 @@ export class SMidi implements ISerializable<SerializedMidiNodes> {
   }
 
   onMidiMessage(event: WebMidi.MIDIMessageEvent) {
-    const gateNode = this.createGateNode();
-    const cvNode = this.createCVNode();
+    const gateNode = this.getGateNode();
+    const cvNode = this.getCVNode();
     const [command, note, velocity] = event.data;
     if (command === MidiB0.NOTE_ON && velocity > 0) {
       this.ecs.audio.setParamValue([cvNode, "offset"], this.noteToCV(note));

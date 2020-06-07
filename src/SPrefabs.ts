@@ -283,13 +283,13 @@ export class SPrefabs {
   createMIDI() {
     const device = this.createDevice("MIDI in");
 
-    const gateNode = this.ecs.midi.createGateNode();
+    const gateNode = this.ecs.midi.getGateNode();
     this.ecs.prefabs.createPort(device, 20, 40, {
       name: "gate",
       output: [gateNode, 0],
     });
 
-    const cvNode = this.ecs.midi.createCVNode();
+    const cvNode = this.ecs.midi.getCVNode();
     this.ecs.prefabs.createPort(device, 70, 40, {
       name: "cv",
       output: [cvNode, 0],
