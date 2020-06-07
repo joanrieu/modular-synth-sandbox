@@ -237,7 +237,20 @@ export class SPrefabs {
     const el = document.getElementsByTagName("audio")[0] as HTMLAudioElement;
     const res = await fetch(el.src);
     const arrayBuffer = await res.arrayBuffer();
-    const audioBuffer = await this.ecs.audio.ctx.decodeAudioData(arrayBuffer);
+    let audioBuffer = await this.ecs.audio.ctx.decodeAudioData(arrayBuffer);
+    if (audioBuffer.numberOfChannels > 4) {
+      const oldAudioBuffer = audioBuffer;
+      audioBuffer = new AudioBuffer({
+        length: oldAudioBuffer.length,
+        sampleRate: oldAudioBuffer.sampleRate,
+        numberOfChannels: 2,
+      });
+      const array = new Float32Array(audioBuffer.length);
+      oldAudioBuffer.copyFromChannel(array, 0);
+      audioBuffer.copyToChannel(array, 0);
+      oldAudioBuffer.copyFromChannel(array, 1);
+      audioBuffer.copyToChannel(array, 1);
+    }
     return audioBuffer;
   }
 
