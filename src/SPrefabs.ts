@@ -223,33 +223,76 @@ export class SPrefabs {
 
   createReverb() {
     const device = this.createDevice("Reverb");
-    const node = this.ecs.audio.createConvolverNode([
+
+    const gain1 = this.ecs.audio.createGainNode();
+    const convolution = this.ecs.audio.createConvolverNode([
       "prefabs",
       this.createReverbArray.name,
       [],
     ]);
-    this.createPort(device, 20, 40, { name: "in", input: [node, 0] });
-    this.createPort(device, 20, 90, { name: "out", output: [node, 0] });
+    const delay1 = this.ecs.audio.createDelayNode({
+      delayTime: 150,
+    });
+    const delay2 = this.ecs.audio.createDelayNode({
+      delayTime: 200,
+    });
+    const gain2 = this.ecs.audio.createGainNode({
+      gain: 3,
+    });
+
+    this.ecs.audio.connect([gain1, 0], [convolution, 0]);
+    this.ecs.audio.connect([gain1, 0], [delay1, 0]);
+    this.ecs.audio.connect([gain1, 0], [delay2, 0]);
+    this.ecs.audio.connect([convolution, 0], [gain2, 0]);
+    this.ecs.audio.connect([delay1, 0], [gain2, 0]);
+    this.ecs.audio.connect([delay2, 0], [gain2, 0]);
+
+    this.createPort(device, 20, 40, { name: "in", input: [convolution, 0] });
+    this.createPort(device, 20, 90, { name: "out", output: [gain2, 0] });
+
     return device;
   }
 
   async createReverbArray() {
-    const el = document.getElementsByTagName("audio")[0] as HTMLAudioElement;
-    const res = await fetch(el.src);
-    const arrayBuffer = await res.arrayBuffer();
-    let audioBuffer = await this.ecs.audio.ctx.decodeAudioData(arrayBuffer);
-    if (audioBuffer.numberOfChannels > 4) {
-      const oldAudioBuffer = audioBuffer;
+    const el = document.querySelector<HTMLAudioElement>("audio");
+    let audioBuffer;
+    if (el) {
+      const res = await fetch(el.src);
+      const arrayBuffer = await res.arrayBuffer();
+      audioBuffer = await this.ecs.audio.ctx.decodeAudioData(arrayBuffer);
+      if (audioBuffer.numberOfChannels > 4) {
+        const oldAudioBuffer = audioBuffer;
+        audioBuffer = new AudioBuffer({
+          length: oldAudioBuffer.length,
+          sampleRate: oldAudioBuffer.sampleRate,
+          numberOfChannels: 2,
+        });
+        const array = new Float32Array(audioBuffer.length);
+        oldAudioBuffer.copyFromChannel(array, 0);
+        audioBuffer.copyToChannel(array, 0);
+        oldAudioBuffer.copyFromChannel(array, 1);
+        audioBuffer.copyToChannel(array, 1);
+      }
+    } else {
+      const sampleRate = this.ecs.audio.sampleRate;
       audioBuffer = new AudioBuffer({
-        length: oldAudioBuffer.length,
-        sampleRate: oldAudioBuffer.sampleRate,
+        length: sampleRate * 5,
+        sampleRate: sampleRate,
         numberOfChannels: 2,
       });
-      const array = new Float32Array(audioBuffer.length);
-      oldAudioBuffer.copyFromChannel(array, 0);
-      audioBuffer.copyToChannel(array, 0);
-      oldAudioBuffer.copyFromChannel(array, 1);
-      audioBuffer.copyToChannel(array, 1);
+      for (let channel = 0; channel < audioBuffer.numberOfChannels; ++channel) {
+        const array = audioBuffer.getChannelData(channel);
+        for (let i = 0; i < array.length; ++i) {
+          const x = i / sampleRate;
+          const parabola = 1 - (x / 3) ** 2;
+          if (parabola > 0) {
+            let val = Math.abs(Math.random());
+            const coef = 0.99;
+            if (i > 0) val = array[i - 1] * coef + val * (1 - coef);
+            array[i] = parabola * val;
+          }
+        }
+      }
     }
     return audioBuffer;
   }
