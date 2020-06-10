@@ -224,31 +224,14 @@ export class SPrefabs {
   createReverb() {
     const device = this.createDevice("Reverb");
 
-    const gain1 = this.ecs.audio.createGainNode();
     const convolution = this.ecs.audio.createConvolverNode([
       "prefabs",
       this.createReverbArray.name,
       [],
     ]);
-    const delay1 = this.ecs.audio.createDelayNode({
-      delayTime: 150,
-    });
-    const delay2 = this.ecs.audio.createDelayNode({
-      delayTime: 200,
-    });
-    const gain2 = this.ecs.audio.createGainNode({
-      gain: 3,
-    });
-
-    this.ecs.audio.connect([gain1, 0], [convolution, 0]);
-    this.ecs.audio.connect([gain1, 0], [delay1, 0]);
-    this.ecs.audio.connect([gain1, 0], [delay2, 0]);
-    this.ecs.audio.connect([convolution, 0], [gain2, 0]);
-    this.ecs.audio.connect([delay1, 0], [gain2, 0]);
-    this.ecs.audio.connect([delay2, 0], [gain2, 0]);
 
     this.createPort(device, 20, 40, { name: "in", input: [convolution, 0] });
-    this.createPort(device, 20, 90, { name: "out", output: [gain2, 0] });
+    this.createPort(device, 20, 90, { name: "out", output: [convolution, 0] });
 
     return device;
   }
