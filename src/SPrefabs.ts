@@ -230,8 +230,16 @@ export class SPrefabs {
       [],
     ]);
 
+    const hpf = this.ecs.audio.createBiquadFilterNode({
+      type: "highpass",
+      frequency: 10,
+      Q: 0,
+    });
+
+    this.ecs.audio.connect([convolution, 0], [hpf, 0]);
+
     this.createPort(device, 20, 40, { name: "in", input: [convolution, 0] });
-    this.createPort(device, 20, 90, { name: "out", output: [convolution, 0] });
+    this.createPort(device, 20, 90, { name: "out", output: [hpf, 0] });
 
     return device;
   }
