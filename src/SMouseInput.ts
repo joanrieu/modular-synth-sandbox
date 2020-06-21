@@ -1,5 +1,5 @@
 import { CPointer } from "./CPointer";
-import { CTransform } from "./CTransform";
+import { CTransform, intersection } from "./CTransform";
 import { ECS, Entity } from "./ECS";
 
 export class SMouseInput {
@@ -37,10 +37,7 @@ export class SMouseInput {
       const targetTransform = this.ecs.display.getWorldTransform(targetEntity);
       if (
         targetTransform.parent === parent &&
-        targetTransform.x <= this.transform.x &&
-        targetTransform.y <= this.transform.y &&
-        targetTransform.x + targetTransform.w > this.transform.x &&
-        targetTransform.y + targetTransform.h > this.transform.y
+        intersection(this.transform, targetTransform)
       ) {
         return this.findTargetEntity(pointerTransform, targetEntity);
       }

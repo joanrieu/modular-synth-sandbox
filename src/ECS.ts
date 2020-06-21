@@ -7,6 +7,7 @@ import { CPointerGrabTarget } from "./CPointerGrabTarget";
 import { CPort } from "./CPort";
 import { CScope } from "./CScope";
 import { CTransform } from "./CTransform";
+import { CTrashcan } from "./CTrashcan";
 import { CWire } from "./CWire";
 import { SAudio } from "./SAudio";
 import { SAutosave } from "./SAutosave";
@@ -24,6 +25,8 @@ import { SPointerGrabber } from "./SPointerGrabber";
 import { SPortRenderer } from "./SPortRenderer";
 import { SPrefabs } from "./SPrefabs";
 import { SScopeRenderer } from "./SScopeRenderer";
+import STrash from "./STrash";
+import STrashcanRenderer from "./STrashcanRenderer";
 import { SWireManager } from "./SWireManager";
 import { SWireRenderer } from "./SWireRenderer";
 
@@ -54,6 +57,7 @@ export class ECS {
   knobDragZones = new EntityComponentMap<CKnobDragZone>();
   buttons = new EntityComponentMap<CButton>();
   scopes = new EntityComponentMap<CScope>();
+  trashcans = new EntityComponentMap<CTrashcan>();
 
   prefabs = new SPrefabs(this);
   audio = new SAudio(this);
@@ -67,6 +71,7 @@ export class ECS {
   knobManager = new SKnobManager(this);
   midi = new SMidi(this);
   autosave = new SAutosave(this);
+  trash = new STrash(this);
   // debugRenderer = new SDebugRenderer(this);
   scopeRenderer = new SScopeRenderer(this);
   deviceRenderer = new SDeviceRenderer(this);
@@ -74,4 +79,5 @@ export class ECS {
   knobRenderer = new SKnobRenderer(this);
   buttonRenderer = new SButtonRenderer(this);
   wireRenderer = new SWireRenderer(this);
+  trashRenderer = new STrashcanRenderer(this);
 }
