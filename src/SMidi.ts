@@ -1,4 +1,4 @@
-import { ECS } from "./ECS";
+import { ECS, Entity } from "./ECS";
 import { ISerializable } from "./ISerializable";
 import { AudioDeviceId, AudioNodeId } from "./SAudio";
 
@@ -69,6 +69,20 @@ export class SMidi implements ISerializable<SerializedMidiNodes> {
 
   noteToCV(note: number) {
     return 2 ** ((note - 33) / 12);
+  }
+
+  deleteDevice(entity: Entity) {
+    for (const node of this.gateNodes) {
+      if (node[0] === entity) {
+        this.gateNodes.delete(node);
+      }
+    }
+
+    for (const node of this.cvNodes) {
+      if (node[0] === entity) {
+        this.cvNodes.delete(node);
+      }
+    }
   }
 
   save(): SerializedMidiNodes {

@@ -1,5 +1,5 @@
 import { intersection, CTransform } from "./CTransform";
-import { ECS, Entity } from "./ECS";
+import { ECS, Entity, EntityComponentMap, EntitySet } from "./ECS";
 import { IUpdatable } from "./IUpdatable";
 
 export default class STrash implements IUpdatable {
@@ -49,6 +49,34 @@ export default class STrash implements IUpdatable {
   }
 
   deleteDevice(entity: Entity) {
-    // TODO
+    let count = 0;
+    const trash = new Set([entity]);
+    while (trash.size !== count) {
+      count = trash.size;
+      for (const [entity, { parent }] of this.ecs.transforms) {
+        if (parent && trash.has(parent)) {
+          trash.add(entity);
+        }
+      }
+    }
+
+    for (const [entity, wire] of this.ecs.wires) {
+      if (trash.has(wire.source) || trash.has(wire.destination)) {
+        trash.add(entity);
+      }
+    }
+
+    for (const entity of trash) {
+      if (this.ecs.devices.has(entity)) {
+        this.ecs.audio.deleteDevice(entity);
+        this.ecs.midi.deleteDevice(entity);
+      }
+
+      for (const v of Object.values(this.ecs)) {
+        if (v instanceof EntitySet || v instanceof EntityComponentMap) {
+          v.delete(entity);
+        }
+      }
+    }
   }
 }

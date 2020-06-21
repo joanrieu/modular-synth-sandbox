@@ -12,6 +12,8 @@ export type AudioPortId = [AudioNodeId, number];
 
 export type AudioParamId = [AudioNodeId, string];
 
+export type AudioConnectionId = [AudioPortId, AudioPortId | AudioParamId];
+
 function isPort(id: AudioPortId | AudioParamId): id is AudioPortId {
   const [, portOrParam] = id;
   return typeof portOrParam === "number";
@@ -41,6 +43,7 @@ export class SAudio implements ISerializable<SerializedAudio> {
   ctx = new AudioContext();
 
   private nodes = new Map<string, [AudioNode, Record<string, any>]>();
+  private nextNodeIndex = 1;
   private connections = new Set<string>();
 
   get sampleRate() {
@@ -123,11 +126,9 @@ export class SAudio implements ISerializable<SerializedAudio> {
     return this.createAudioNode(device, node, createBuffer);
   }
 
-  connect(
-    srcPortId: AudioPortId,
-    dstPortOrParamId: AudioPortId | AudioParamId,
-    connect = true
-  ) {
+  connect(connectionId: AudioConnectionId, connect = true) {
+    const [srcPortId, dstPortOrParamId] = connectionId;
+
     const [srcId, srcPort] = srcPortId;
     const [dstId] = dstPortOrParamId;
 
@@ -163,7 +164,7 @@ export class SAudio implements ISerializable<SerializedAudio> {
     node: T,
     options: Record<string, any> = {}
   ) {
-    const id = [device, this.nodes.size] as AudioNodeId<T>;
+    const id = [device, this.nextNodeIndex++] as AudioNodeId<T>;
     this.nodes.set(JSON.stringify(id), [node, options]);
     return id;
   }
@@ -192,6 +193,23 @@ export class SAudio implements ISerializable<SerializedAudio> {
     this.getNode(nodeId).options[paramName] = value;
   }
 
+  deleteDevice(entity: Entity) {
+    for (const id of this.connections) {
+      const connectionId = JSON.parse(id) as AudioConnectionId;
+      const [[[srcEntity]], [[dstEntity]]] = connectionId;
+      if (srcEntity === entity || dstEntity === entity) {
+        this.connect(connectionId, false);
+      }
+    }
+
+    for (const id of this.nodes.keys()) {
+      const [device] = JSON.parse(id) as AudioNodeId;
+      if (device === entity) {
+        this.nodes.delete(id);
+      }
+    }
+  }
+
   save(): SerializedAudio {
     return [
       [...this.nodes].map(([id, [node, options]]) => {
@@ -204,13 +222,13 @@ export class SAudio implements ISerializable<SerializedAudio> {
 
   restore([nodes, connections]: SerializedAudio) {
     for (const [[device, node], [ctor, options]] of nodes) {
+      this.nextNodeIndex = node;
       const create = ("create" + ctor) as keyof this;
       ((this[create] as unknown) as Function)(device, options);
     }
 
     for (const connection of connections) {
-      const [srcPortId, dstPortId]: AudioPortId[] = JSON.parse(connection);
-      this.connect(srcPortId, dstPortId);
+      this.connect(JSON.parse(connection));
     }
   }
 }

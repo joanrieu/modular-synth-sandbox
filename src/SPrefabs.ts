@@ -32,7 +32,10 @@ export class SPrefabs {
       const gainNode = this.ecs.audio.createGainNode(device, {
         gain: 55 /* convert CV to Hz */,
       });
-      this.ecs.audio.connect([gainNode, 0], [node, "frequency"]);
+      this.ecs.audio.connect([
+        [gainNode, 0],
+        [node, "frequency"],
+      ]);
 
       this.createPort(device, 20, 40, {
         name: "freq",
@@ -66,7 +69,10 @@ export class SPrefabs {
     if (!audioRange) {
       const gainNode = this.ecs.audio.createGainNode(device, { gain: 50 });
 
-      this.ecs.audio.connect([outNode, 0], [gainNode, 0]);
+      this.ecs.audio.connect([
+        [outNode, 0],
+        [gainNode, 0],
+      ]);
       outNode = gainNode;
 
       this.createKnob(device, 20, 40, {
@@ -169,7 +175,10 @@ export class SPrefabs {
     this.createPort(device, 20, 140, { name: "out", output: [node2, 0] });
     this.createVCAGainButton(device, 70, 140, node2, 100);
 
-    this.ecs.audio.connect([node1, 0], [node2, 0]);
+    this.ecs.audio.connect([
+      [node1, 0],
+      [node2, 0],
+    ]);
 
     return device;
   }
@@ -240,7 +249,10 @@ export class SPrefabs {
       Q: 0,
     });
 
-    this.ecs.audio.connect([convolution, 0], [hpf, 0]);
+    this.ecs.audio.connect([
+      [convolution, 0],
+      [hpf, 0],
+    ]);
 
     this.createPort(device, 20, 40, { name: "in", input: [convolution, 0] });
     this.createPort(device, 20, 90, { name: "out", output: [hpf, 0] });

@@ -40,7 +40,7 @@ export class SWireManager implements IUpdatable {
     });
     this.ecs.pointerGrabTargets.set(wire, {
       grabbed: {
-        pointer: pointer,
+        pointer,
         dx: 0,
         dy: 0,
       },
@@ -83,7 +83,7 @@ export class SWireManager implements IUpdatable {
       return false;
     }
 
-    this.ecs.audio.connect(sourcePort.output, destinationPort.input, connect);
+    this.ecs.audio.connect([sourcePort.output, destinationPort.input], connect);
 
     return true;
   }
