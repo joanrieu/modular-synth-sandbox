@@ -1,22 +1,23 @@
-import { ECS, SystemCallback } from "./ECS";
+import { ECS, Entity, SystemCallback } from "./ECS";
 import { ISerializable } from "./ISerializable";
 
-export type AudioNodeId<T extends AudioNode = AudioNode> = number & {
-  __tag: "AudioNodeId";
-  __type: T;
-};
+export type AudioDeviceId = Entity;
 
-export type AudioParamId<T extends AudioNode = AudioNode> = [
-  AudioNodeId<T>,
-  string
-];
-
-export type AudioPortId<T extends AudioNode = AudioNode> = [
-  AudioNodeId<T>,
+export type AudioNodeId<T extends AudioNode = AudioNode> = [
+  AudioDeviceId,
   number
-];
+] & { __type: T };
 
-type SerializedAudioNodeType = string & { __tag: "SerializedAudioNodeType" };
+export type AudioPortId = [AudioNodeId, number];
+
+export type AudioParamId = [AudioNodeId, string];
+
+function isPort(id: AudioPortId | AudioParamId): id is AudioPortId {
+  const [, portOrParam] = id;
+  return typeof portOrParam === "number";
+}
+
+type SerializedAudioNodeType = string & { __type: "SerializedAudioNodeType" };
 
 type SerializedAudioNodeMap = Array<
   [AudioNodeId, [SerializedAudioNodeType, any]]
@@ -39,115 +40,109 @@ export class SAudio implements ISerializable<SerializedAudio> {
 
   ctx = new AudioContext();
 
-  private nodes = new Map<AudioNodeId, [AudioNode, any]>([
-    [this.getMasterNode(), [this.ctx.destination, {}]],
-  ]);
+  private nodes = new Map<string, [AudioNode, Record<string, any>]>();
   private connections = new Set<string>();
 
   get sampleRate() {
     return this.ctx.sampleRate;
   }
 
-  getMasterNode() {
-    return 0 as AudioNodeId<AudioDestinationNode>;
+  createAudioDestinationNode(device: AudioDeviceId) {
+    const node = this.ctx.destination;
+    return this.createAudioNode(device, node, {});
   }
 
-  createAnalyserNode(options?: AnalyserOptions) {
-    const id = this.nodes.size as AudioNodeId<AnalyserNode>;
+  createAnalyserNode(device: AudioDeviceId, options?: AnalyserOptions) {
     const node = new AnalyserNode(this.ctx, options);
-    this.nodes.set(id, [node, options || {}]);
-    return id;
+    return this.createAudioNode(device, node, options);
   }
 
   getAnalyserFrequencyBinCount(nodeId: AudioNodeId<AnalyserNode>) {
-    return this.getNode(nodeId).frequencyBinCount;
+    return this.getNode(nodeId).node.frequencyBinCount;
   }
 
   getAnalyserFloatTimeDomainData(
     nodeId: AudioNodeId<AnalyserNode>,
     array: Float32Array
   ) {
-    return this.getNode(nodeId).getFloatTimeDomainData(array);
+    return this.getNode(nodeId).node.getFloatTimeDomainData(array);
   }
 
-  createBiquadFilterNode(options?: BiquadFilterOptions) {
-    const id = this.nodes.size as AudioNodeId<BiquadFilterNode>;
+  createBiquadFilterNode(device: AudioDeviceId, options?: BiquadFilterOptions) {
     const node = new BiquadFilterNode(this.ctx, options);
-    this.nodes.set(id, [node, options || {}]);
-    return id;
+    return this.createAudioNode(device, node, options);
   }
 
-  createConstantSourceNode(options?: ConstantSourceOptions) {
-    const id = this.nodes.size as AudioNodeId<ConstantSourceNode>;
+  createConstantSourceNode(
+    device: AudioDeviceId,
+    options?: ConstantSourceOptions
+  ) {
     const node = new ConstantSourceNode(this.ctx, options);
     node.start();
-    this.nodes.set(id, [node, options || {}]);
-    return id;
+    return this.createAudioNode(device, node, options);
   }
 
-  createDelayNode(options?: DelayOptions) {
-    const id = this.nodes.size as AudioNodeId<DelayNode>;
+  createDelayNode(device: AudioDeviceId, options?: DelayOptions) {
     const node = new DelayNode(this.ctx, options);
-    this.nodes.set(id, [node, options || {}]);
-    return id;
+    return this.createAudioNode(device, node, options);
   }
 
-  createGainNode(options?: GainOptions) {
-    const id = this.nodes.size as AudioNodeId<GainNode>;
+  createGainNode(device: AudioDeviceId, options?: GainOptions) {
     const node = new GainNode(this.ctx, options);
-    this.nodes.set(id, [node, options || {}]);
-    return id;
+    return this.createAudioNode(device, node, options);
   }
 
-  createOscillatorNode(options?: OscillatorOptions) {
-    const id = this.nodes.size as AudioNodeId<OscillatorNode>;
+  createOscillatorNode(device: AudioDeviceId, options?: OscillatorOptions) {
     const node = new OscillatorNode(this.ctx, options);
     node.start();
-    this.nodes.set(id, [node, options || {}]);
-    return id;
+    return this.createAudioNode(device, node, options);
   }
 
   getOscillatorType(nodeId: AudioNodeId<OscillatorNode>) {
-    return this.getNode(nodeId).type;
+    return this.getNode(nodeId).node.type;
   }
 
   setOscillatorType(nodeId: AudioNodeId<OscillatorNode>, type: OscillatorType) {
-    this.getNode(nodeId).type = type;
-    this.nodes.get(nodeId)![1].type = type;
+    const { node, options } = this.getNode(nodeId);
+    node.type = type;
+    options.type = type;
   }
 
-  createStereoPannerNode(options?: StereoPannerOptions) {
-    const id = this.nodes.size as AudioNodeId<StereoPannerNode>;
+  createStereoPannerNode(device: AudioDeviceId, options?: StereoPannerOptions) {
     const node = new StereoPannerNode(this.ctx, options);
-    this.nodes.set(id, [node, options || {}]);
-    return id;
+    return this.createAudioNode(device, node, options);
   }
 
-  createConvolverNode(createBuffer: SystemCallback<AudioBuffer>) {
-    const id = this.nodes.size as AudioNodeId<StereoPannerNode>;
+  createConvolverNode(
+    device: AudioDeviceId,
+    createBuffer: SystemCallback<AudioBuffer>
+  ) {
     const node = new ConvolverNode(this.ctx);
     const buffer = this.ecs.invokeCallback(createBuffer);
     Promise.resolve(buffer).then((buffer) => (node.buffer = buffer));
-    this.nodes.set(id, [node, createBuffer]);
-    return id;
+    return this.createAudioNode(device, node, createBuffer);
   }
 
-  connect<T1 extends AudioNode, T2 extends AudioNode>(
-    [srcId, srcPort]: AudioPortId<T1>,
-    [dstId, dstPortOrParam]: AudioPortId<T2> | AudioParamId<T2>,
+  connect(
+    srcPortId: AudioPortId,
+    dstPortOrParamId: AudioPortId | AudioParamId,
     connect = true
   ) {
-    const srcNode = this.nodes.get(srcId)![0] as T1;
-    const dstNode = this.nodes.get(dstId)![0] as T2;
+    const [srcId, srcPort] = srcPortId;
+    const [dstId] = dstPortOrParamId;
 
-    if (typeof dstPortOrParam === "number") {
+    const srcNode = this.getNode(srcId).node;
+    const dstNode = this.getNode(dstId).node;
+
+    if (isPort(dstPortOrParamId)) {
+      const [, dstPort] = dstPortOrParamId;
       if (connect) {
-        srcNode.connect(dstNode, srcPort, dstPortOrParam);
+        srcNode.connect(dstNode, srcPort, dstPort);
       } else {
-        srcNode.disconnect(dstNode, srcPort, dstPortOrParam);
+        srcNode.disconnect(dstNode, srcPort, dstPort);
       }
     } else {
-      const dstParam = this.getParam([dstId, dstPortOrParam]);
+      const dstParam = this.getParam(dstPortOrParamId);
       if (connect) {
         srcNode.connect(dstParam, srcPort);
       } else {
@@ -155,7 +150,7 @@ export class SAudio implements ISerializable<SerializedAudio> {
       }
     }
 
-    const connection = [srcId, srcPort, dstId, dstPortOrParam].join();
+    const connection = JSON.stringify([srcPortId, dstPortOrParamId]);
     if (connect) {
       this.connections.add(connection);
     } else {
@@ -163,54 +158,59 @@ export class SAudio implements ISerializable<SerializedAudio> {
     }
   }
 
-  private getNode<T extends AudioNode>(nodeId: AudioNodeId<T>) {
-    return this.nodes.get(nodeId)![0] as T;
+  private createAudioNode<T extends AudioNode>(
+    device: Entity,
+    node: T,
+    options: Record<string, any> = {}
+  ) {
+    const id = [device, this.nodes.size] as AudioNodeId<T>;
+    this.nodes.set(JSON.stringify(id), [node, options]);
+    return id;
   }
 
-  private getParam<T extends AudioNode>([nodeId, paramName]: AudioParamId<T>) {
-    const node = this.getNode(nodeId);
-    const key = paramName as keyof T;
+  private getNode<T extends AudioNode>(nodeId: AudioNodeId<T>) {
+    const [node, options] = this.nodes.get(JSON.stringify(nodeId))!;
+    return { node: node as T, options };
+  }
+
+  private getParam([nodeId, paramName]: AudioParamId) {
+    const { node } = this.getNode(nodeId);
+    const key = paramName as keyof AudioNode;
     const param = node[key];
     if (!(param instanceof AudioParam))
       throw new Error("invalid param name: " + paramName);
     return param;
   }
 
-  getParamValue<T extends AudioNode>(paramId: AudioParamId<T>) {
+  getParamValue(paramId: AudioParamId) {
     return this.getParam(paramId).value;
   }
 
-  setParamValue<T extends AudioNode>(paramId: AudioParamId<T>, value: number) {
+  setParamValue(paramId: AudioParamId, value: number) {
+    const [nodeId, paramName] = paramId;
     this.getParam(paramId).value = value;
-    this.nodes.get(paramId[0])![1][paramId[1]] = value;
+    this.getNode(nodeId).options[paramName] = value;
   }
 
   save(): SerializedAudio {
     return [
       [...this.nodes].map(([id, [node, options]]) => {
         const ctor = node.constructor.name as SerializedAudioNodeType;
-        return [id, [ctor, options]];
+        return [JSON.parse(id), [ctor, options]];
       }),
       [...this.connections],
     ];
   }
 
   restore([nodes, connections]: SerializedAudio) {
-    for (const [id, [ctor, options]] of nodes) {
-      if (id > 0) {
-        const create = ("create" + ctor) as keyof this;
-        ((this[create] as unknown) as (options: any) => AudioNode)(options);
-      }
+    for (const [[device, node], [ctor, options]] of nodes) {
+      const create = ("create" + ctor) as keyof this;
+      ((this[create] as unknown) as Function)(device, options);
     }
 
     for (const connection of connections) {
-      const [srcId, srcPort, dstId, dstPortOrParam] = connection.split(",");
-      const src: AudioPortId = [Number(srcId) as AudioNodeId, Number(srcPort)];
-      const dst = [
-        Number(dstId) as AudioNodeId,
-        isNaN(Number(dstPortOrParam)) ? dstPortOrParam : Number(dstPortOrParam),
-      ] as AudioPortId<any> | AudioParamId<any>;
-      this.connect(src, dst);
+      const [srcPortId, dstPortId]: AudioPortId[] = JSON.parse(connection);
+      this.connect(srcPortId, dstPortId);
     }
   }
 }

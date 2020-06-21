@@ -15,7 +15,7 @@ export class SPrefabs {
 
     this.createPort(device, 20, 40, {
       name: "spk",
-      input: [this.ecs.audio.getMasterNode(), 0],
+      input: [this.ecs.audio.createAudioDestinationNode(device), 0],
     });
 
     return device;
@@ -24,12 +24,12 @@ export class SPrefabs {
   createOscillator(audioRange: boolean) {
     const device = this.createDevice(audioRange ? "VCO" : "LFO");
 
-    const node = this.ecs.audio.createOscillatorNode({
+    const node = this.ecs.audio.createOscillatorNode(device, {
       frequency: 0,
     });
 
     if (audioRange) {
-      const gainNode = this.ecs.audio.createGainNode({
+      const gainNode = this.ecs.audio.createGainNode(device, {
         gain: 55 /* convert CV to Hz */,
       });
       this.ecs.audio.connect([gainNode, 0], [node, "frequency"]);
@@ -64,7 +64,7 @@ export class SPrefabs {
     let outNode: AudioNodeId = node;
 
     if (!audioRange) {
-      const gainNode = this.ecs.audio.createGainNode({ gain: 50 });
+      const gainNode = this.ecs.audio.createGainNode(device, { gain: 50 });
 
       this.ecs.audio.connect([outNode, 0], [gainNode, 0]);
       outNode = gainNode;
@@ -138,7 +138,7 @@ export class SPrefabs {
 
   createLPF() {
     const device = this.createDevice("LPF");
-    const node = this.ecs.audio.createBiquadFilterNode();
+    const node = this.ecs.audio.createBiquadFilterNode(device);
     this.createPort(device, 45, 40, { name: "in", input: [node, 0] });
     this.createPort(device, 20, 90, { name: "fm", input: [node, "frequency"] });
     this.createKnob(device, 70, 90, {
@@ -154,7 +154,7 @@ export class SPrefabs {
   createVCA() {
     const device = this.createDevice("VCA");
 
-    const node1 = this.ecs.audio.createGainNode();
+    const node1 = this.ecs.audio.createGainNode(device);
     this.createPort(device, 45, 40, { name: "in", input: [node1, 0] });
     this.createPort(device, 20, 90, { name: "mod", input: [node1, "gain"] });
     this.createKnob(device, 70, 90, {
@@ -164,10 +164,10 @@ export class SPrefabs {
       max: 2,
     });
 
-    const node2 = this.ecs.audio.createGainNode();
+    const node2 = this.ecs.audio.createGainNode(device);
     this.ecs.audio.setParamValue([node2, "gain"], 1);
     this.createPort(device, 20, 140, { name: "out", output: [node2, 0] });
-    this.createVCAGainButton(device, 70, 140, [node2, "gain"], 100);
+    this.createVCAGainButton(device, 70, 140, node2, 100);
 
     this.ecs.audio.connect([node1, 0], [node2, 0]);
 
@@ -178,7 +178,7 @@ export class SPrefabs {
     device: Entity,
     x: number,
     y: number,
-    param: AudioParamId<GainNode>,
+    node: AudioNodeId,
     gain: number
   ) {
     const entity = this.ecs.createEntity("button");
@@ -195,7 +195,11 @@ export class SPrefabs {
       label: "x" + gain,
       toggle: true,
       down: false,
-      onClick: ["prefabs", this.onVCAGainButtonClick.name, [param, gain]],
+      onClick: [
+        "prefabs",
+        this.onVCAGainButtonClick.name,
+        [[node, "gain"], gain],
+      ],
     });
     return entity;
   }
@@ -209,7 +213,7 @@ export class SPrefabs {
 
   createPanner() {
     const device = this.createDevice("Panner");
-    const node = this.ecs.audio.createStereoPannerNode();
+    const node = this.ecs.audio.createStereoPannerNode(device);
     this.createPort(device, 20, 40, { name: "in", input: [node, 0] });
     this.createKnob(device, 20, 90, {
       name: "pan",
@@ -224,13 +228,13 @@ export class SPrefabs {
   createReverb() {
     const device = this.createDevice("Reverb");
 
-    const convolution = this.ecs.audio.createConvolverNode([
+    const convolution = this.ecs.audio.createConvolverNode(device, [
       "prefabs",
       this.createReverbArray.name,
       [],
     ]);
 
-    const hpf = this.ecs.audio.createBiquadFilterNode({
+    const hpf = this.ecs.audio.createBiquadFilterNode(device, {
       type: "highpass",
       frequency: 10,
       Q: 0,
@@ -290,7 +294,7 @@ export class SPrefabs {
 
   createDelay(maxDelayTime = 10) {
     const device = this.createDevice("Delay");
-    const node = this.ecs.audio.createDelayNode({ maxDelayTime });
+    const node = this.ecs.audio.createDelayNode(device, { maxDelayTime });
     this.createPort(device, 20, 40, { name: "in", input: [node, 0] });
     this.createKnob(device, 20, 90, {
       name: "val",
@@ -305,7 +309,7 @@ export class SPrefabs {
   createScope() {
     const device = this.createDevice("Scope");
     this.ecs.transforms.set(device, { x: 0, y: 0, w: 300, h: 200 });
-    const node = this.ecs.audio.createAnalyserNode();
+    const node = this.ecs.audio.createAnalyserNode(device);
     this.ecs.scopes.set(device, { node });
     this.createPort(device, 10, 10, {
       name: "in",
@@ -317,13 +321,13 @@ export class SPrefabs {
   createMIDI() {
     const device = this.createDevice("MIDI in");
 
-    const gateNode = this.ecs.midi.getGateNode();
+    const gateNode = this.ecs.midi.createGateNode(device);
     this.ecs.prefabs.createPort(device, 20, 40, {
       name: "gate",
       output: [gateNode, 0],
     });
 
-    const cvNode = this.ecs.midi.getCVNode();
+    const cvNode = this.ecs.midi.createCVNode(device);
     this.ecs.prefabs.createPort(device, 70, 40, {
       name: "cv",
       output: [cvNode, 0],
