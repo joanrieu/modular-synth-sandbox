@@ -5,7 +5,7 @@
   "author": "Joan Rieu <joan@joanrieu.com>",
   "scripts": {
     "start": "parcel serve src/index.html",
-    "build": "parcel build src/index.html --public-url https://joanrieu.github.io/modular-synth-sandbox/"
+    "build": "parcel build src/index.html"
   },
   "devDependencies": {
     "parcel-bundler": "^1.12.4",

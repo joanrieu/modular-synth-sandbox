@@ -1,0 +1,22 @@
+name: GitHub Pages
+on:
+  push:
+    branches: [master]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - run: npm install
+      - run: npm run build -- --public-url https://joanrieu.github.io/modular-synth-sandbox/ --no-minify
+      - run: |
+          git init
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git remote add origin "https://${{secrets.GH_TOKEN}}@github.com/joanrieu/modular-synth-sandbox"
+          git checkout -b gh-pages
+          git add .
+          git commit -m "build app"
+          git push -f origin gh-pages
+        working-directory: dist
