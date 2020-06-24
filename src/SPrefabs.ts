@@ -3,6 +3,7 @@ import { CKnob } from "./CKnob";
 import { CPort } from "./CPort";
 import { CTransform } from "./CTransform";
 import { ECS, Entity } from "./ECS";
+import { msws } from "./random";
 import { AudioNodeId, AudioParamId, RecorderNode } from "./SAudio";
 
 export class SPrefabs {
@@ -300,16 +301,20 @@ export class SPrefabs {
         sampleRate: sampleRate,
         numberOfChannels: 2,
       });
-      for (let channel = 0; channel < audioBuffer.numberOfChannels; ++channel) {
-        const array = audioBuffer.getChannelData(channel);
-        for (let i = 0; i < array.length; ++i) {
+      const channels = [
+        audioBuffer.getChannelData(1),
+        audioBuffer.getChannelData(0),
+      ];
+      const rng = msws();
+      for (let i = 0; i < audioBuffer.length; ++i) {
+        for (const samples of channels) {
           const x = i / sampleRate;
           const parabola = 1 - (x / 3) ** 2;
           if (parabola > 0) {
-            let val = Math.abs(Math.random());
-            const coef = 0.99;
-            if (i > 0) val = array[i - 1] * coef + val * (1 - coef);
-            array[i] = parabola * val;
+            let val = rng.next().value;
+            const coef = 0.95;
+            if (i > 0) val = samples[i - 1] * coef + val * (1 - coef);
+            samples[i] = parabola * val;
           }
         }
       }
