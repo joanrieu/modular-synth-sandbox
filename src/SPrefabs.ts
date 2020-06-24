@@ -1,9 +1,9 @@
+import { CButton } from "./CButton";
 import { CKnob } from "./CKnob";
-import { CPointerGrabTarget } from "./CPointerGrabTarget";
 import { CPort } from "./CPort";
 import { CTransform } from "./CTransform";
 import { ECS, Entity } from "./ECS";
-import { AudioNodeId, AudioParamId } from "./SAudio";
+import { AudioNodeId, AudioParamId, RecorderNode } from "./SAudio";
 
 export class SPrefabs {
   constructor(readonly ecs: ECS) {
@@ -13,9 +13,11 @@ export class SPrefabs {
   createMaster() {
     const device = this.createDevice("Master");
 
+    const node = this.ecs.audio.createAudioDestinationNode(device);
+
     this.createPort(device, 20, 40, {
       name: "spk",
-      input: [this.ecs.audio.createAudioDestinationNode(device), 0],
+      input: [node, 0],
     });
 
     return device;
@@ -98,24 +100,27 @@ export class SPrefabs {
     line: number
   ) {
     const button = this.ecs.createEntity("osc-waveform-" + type);
-    this.ecs.transforms.set(button, {
-      parent: device,
-      x: 20,
-      y: 90 + 19 * line,
-      w: 80,
-      h: 20,
-    });
-    this.ecs.buttons.set(button, {
-      label: type,
-      toggle: true,
-      down: type === "sine",
-      onClick: [
-        "prefabs",
-        this.onOscillatorWaveButtonClick.name,
-        [device, node, type],
-      ],
-    });
-    this.ecs.pointerGrabTargets.set(button, {});
+    this.createButton(
+      button,
+      {
+        parent: device,
+        x: 20,
+        y: 90 + 19 * line,
+        w: 80,
+        h: 20,
+      },
+      {
+        label: type,
+        toggle: true,
+        down: type === "sine",
+        onClick: [
+          "prefabs",
+          this.onOscillatorWaveButtonClick.name,
+          [device, node, type],
+        ],
+      }
+    );
+    return button;
   }
 
   onOscillatorWaveButtonClick(
@@ -191,25 +196,26 @@ export class SPrefabs {
     gain: number
   ) {
     const entity = this.ecs.createEntity("button");
-    const grabTarget: CPointerGrabTarget = {};
-    this.ecs.transforms.set(entity, {
-      parent: device,
-      x,
-      y,
-      w: 32,
-      h: 32,
-    });
-    this.ecs.pointerGrabTargets.set(entity, grabTarget);
-    this.ecs.buttons.set(entity, {
-      label: "x" + gain,
-      toggle: true,
-      down: false,
-      onClick: [
-        "prefabs",
-        this.onVCAGainButtonClick.name,
-        [[node, "gain"], gain],
-      ],
-    });
+    this.createButton(
+      entity,
+      {
+        parent: device,
+        x,
+        y,
+        w: 32,
+        h: 32,
+      },
+      {
+        label: "x" + gain,
+        toggle: true,
+        down: false,
+        onClick: [
+          "prefabs",
+          this.onVCAGainButtonClick.name,
+          [[node, "gain"], gain],
+        ],
+      }
+    );
     return entity;
   }
 
@@ -348,6 +354,50 @@ export class SPrefabs {
     return device;
   }
 
+  createRecorder() {
+    const device = this.createDevice("Recorder");
+
+    const node = this.ecs.audio.createRecorderNode(device);
+
+    this.createPort(device, 45, 40, {
+      name: "in",
+      input: [node, 0],
+    });
+
+    const button = this.ecs.createEntity("button");
+    this.createButton(
+      button,
+      {
+        parent: device,
+        x: 10,
+        y: 90,
+        w: 100,
+        h: 20,
+      },
+      {
+        label: "start",
+        toggle: true,
+        down: false,
+        onClick: [
+          "prefabs",
+          this.onRecorderStartStopButtonClicked.name,
+          [node, button],
+        ],
+      }
+    );
+
+    return device;
+  }
+
+  onRecorderStartStopButtonClicked(
+    node: AudioNodeId<RecorderNode>,
+    button: Entity
+  ) {
+    const cbutton = this.ecs.buttons.get(button)!;
+    this.ecs.audio.record(node, cbutton.down);
+    cbutton.label = cbutton.down ? "stop" : "start";
+  }
+
   createDevice(name: string) {
     const getContentBox = this.getContentBox;
     const entity = this.ecs.createEntity(name.toLowerCase());
@@ -411,6 +461,12 @@ export class SPrefabs {
     return entity;
   }
 
+  createButton(entity: Entity, transform: CTransform, button: CButton) {
+    this.ecs.transforms.set(entity, transform);
+    this.ecs.pointerGrabTargets.set(entity, {});
+    this.ecs.buttons.set(entity, button);
+  }
+
   createToolbar() {
     let spot = 0;
     const self = this;
@@ -427,6 +483,7 @@ export class SPrefabs {
     spot += 0.5;
     this.createSpawnButton("Master", nextPosition());
     this.createSpawnButton("MIDI", nextPosition());
+    this.createSpawnButton("Recorder", nextPosition());
     spot += 0.5;
     this.createSpawnButton("VCO", nextPosition());
     this.createSpawnButton("LFO", nextPosition());
@@ -443,9 +500,7 @@ export class SPrefabs {
 
   createNewProjectButton(transform: CTransform) {
     const entity = this.ecs.createEntity("button");
-    this.ecs.transforms.set(entity, transform);
-    this.ecs.pointerGrabTargets.set(entity, {});
-    this.ecs.buttons.set(entity, {
+    this.createButton(entity, transform, {
       label: "New Project",
       toggle: false,
       down: false,
@@ -461,9 +516,7 @@ export class SPrefabs {
 
   createSpawnButton(name: string, transform: CTransform) {
     const entity = this.ecs.createEntity("button");
-    this.ecs.transforms.set(entity, transform);
-    this.ecs.pointerGrabTargets.set(entity, {});
-    this.ecs.buttons.set(entity, {
+    this.createButton(entity, transform, {
       label: name,
       toggle: false,
       down: false,

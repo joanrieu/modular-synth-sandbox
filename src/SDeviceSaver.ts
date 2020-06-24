@@ -44,9 +44,8 @@ export class SDeviceSaver implements ISerializable<SerializedUI> {
       name,
       [...system].filter(
         (entry) =>
-          entities.includes(
-            (typeof entry === "string" ? entry : entry[0]) as Entity
-          ) || name === "wires"
+          entities.includes(Array.isArray(entry) ? entry[0] : entry) ||
+          name === "wires"
       ),
     ]) as SerializedUI;
   }

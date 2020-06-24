@@ -29,6 +29,23 @@ type SerializedAudioConnections = string[];
 
 type SerializedAudio = [SerializedAudioNodeMap, SerializedAudioConnections];
 
+export class RecorderNode extends MediaStreamAudioDestinationNode {
+  readonly recorder = new MediaRecorder(this.stream, {
+    mimeType: ";codecs=pcm",
+  });
+
+  constructor(context: AudioContext, options?: AudioNodeOptions) {
+    super(context, options);
+    this.recorder.ondataavailable = this.onDataAvailable.bind(this);
+  }
+
+  private onDataAvailable(event: BlobEvent) {
+    // open the audio file with a small delay to prevent it from
+    // stealing focus (it causes us to miss the mouseup event)
+    setTimeout(() => window.open(URL.createObjectURL(event.data)), 100);
+  }
+}
+
 export class SAudio implements ISerializable<SerializedAudio> {
   constructor(private readonly ecs: ECS) {
     const interval = setInterval(() => {
@@ -52,7 +69,21 @@ export class SAudio implements ISerializable<SerializedAudio> {
 
   createAudioDestinationNode(device: AudioDeviceId) {
     const node = this.ctx.destination;
-    return this.createAudioNode(device, node, {});
+    return this.createAudioNode(device, node);
+  }
+
+  createRecorderNode(device: AudioDeviceId, options?: AudioNodeOptions) {
+    const node = new RecorderNode(this.ctx, options);
+    return this.createAudioNode(device, node, options);
+  }
+
+  record(id: AudioNodeId<RecorderNode>, start: boolean) {
+    const { node } = this.getNode(id);
+    if (start) {
+      node.recorder.start();
+    } else {
+      node.recorder.stop();
+    }
   }
 
   createAnalyserNode(device: AudioDeviceId, options?: AnalyserOptions) {
