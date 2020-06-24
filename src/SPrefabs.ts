@@ -61,7 +61,7 @@ export class SPrefabs {
       });
     }
 
-    this.createOscillatorWaveButton(device, node, "sine", 0);
+    this.createOscillatorWaveButton(device, node, "sine", 0, true);
     this.createOscillatorWaveButton(device, node, "triangle", 1);
     this.createOscillatorWaveButton(device, node, "sawtooth", 2);
     this.createOscillatorWaveButton(device, node, "square", 3);
@@ -97,7 +97,8 @@ export class SPrefabs {
     device: Entity,
     node: AudioNodeId<OscillatorNode>,
     type: OscillatorType,
-    line: number
+    line: number,
+    down = false
   ) {
     const button = this.ecs.createEntity("osc-waveform-" + type);
     this.createButton(
@@ -112,7 +113,7 @@ export class SPrefabs {
       {
         label: type,
         toggle: true,
-        down: type === "sine",
+        down,
         onClick: [
           "prefabs",
           this.onOscillatorWaveButtonClick.name,
@@ -132,9 +133,7 @@ export class SPrefabs {
     for (const [entity, transform] of this.ecs.transforms) {
       if (transform.parent === device && this.ecs.buttons.has(entity)) {
         const button = this.ecs.buttons.get(entity)!;
-        if (button.label !== type) {
-          button.down = false;
-        }
+        button.down = button.label === type;
       }
     }
   }
@@ -148,8 +147,16 @@ export class SPrefabs {
   }
 
   createLPF() {
-    const device = this.createDevice("LPF");
-    const node = this.ecs.audio.createBiquadFilterNode(device);
+    return this.createFilter("LPF", "lowpass");
+  }
+
+  createHPF() {
+    return this.createFilter("HPF", "highpass");
+  }
+
+  createFilter(name: string, type: BiquadFilterType) {
+    const device = this.createDevice(name);
+    const node = this.ecs.audio.createBiquadFilterNode(device, { type });
     this.createPort(device, 45, 40, { name: "in", input: [node, 0] });
     this.createPort(device, 20, 90, { name: "fm", input: [node, "frequency"] });
     this.createKnob(device, 70, 90, {
@@ -489,6 +496,7 @@ export class SPrefabs {
     this.createSpawnButton("LFO", nextPosition());
     spot += 0.5;
     this.createSpawnButton("LPF", nextPosition());
+    this.createSpawnButton("HPF", nextPosition());
     this.createSpawnButton("Delay", nextPosition());
     this.createSpawnButton("Panner", nextPosition());
     this.createSpawnButton("Reverb", nextPosition());
