@@ -86,6 +86,22 @@ export class SAudio implements ISerializable<SerializedAudio> {
     }
   }
 
+  createAudioBufferSourceNode(
+    device: AudioDeviceId,
+    options: {
+      createBuffer: SystemCallback<AudioBuffer>;
+    } & Omit<AudioBufferSourceOptions, "buffer">
+  ) {
+    const { createBuffer, ...nodeOptions } = options;
+    const node = new AudioBufferSourceNode(this.ctx, nodeOptions);
+    const buffer = this.ecs.invokeCallback(createBuffer);
+    Promise.resolve(buffer).then((buffer) => {
+      node.buffer = buffer;
+      node.start();
+    });
+    return this.createAudioNode(device, node, options);
+  }
+
   createAnalyserNode(device: AudioDeviceId, options?: AnalyserOptions) {
     const node = new AnalyserNode(this.ctx, options);
     return this.createAudioNode(device, node, options);

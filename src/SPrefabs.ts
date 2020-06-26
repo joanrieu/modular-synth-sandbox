@@ -147,6 +147,41 @@ export class SPrefabs {
     return this.createOscillator(false);
   }
 
+  createNoise() {
+    const device = this.createDevice("Noise");
+
+    const node = this.ecs.audio.createAudioBufferSourceNode(device, {
+      createBuffer: ["prefabs", this.createNoiseBuffer.name, []],
+      loop: true,
+    });
+
+    this.createPort(device, 20, 40, {
+      name: "out",
+      output: [node, 0],
+    });
+
+    return device;
+  }
+
+  createNoiseBuffer() {
+    const sampleRate = this.ecs.audio.sampleRate;
+    const audioBuffer = new AudioBuffer({
+      length: sampleRate,
+      sampleRate,
+      numberOfChannels: 2,
+    });
+    const channels = [
+      audioBuffer.getChannelData(0),
+      audioBuffer.getChannelData(1),
+    ];
+    const rng = msws();
+    for (let i = 0; i < audioBuffer.length; ++i) {
+      channels[0][i] = rng.next().value * 2 - 1;
+      channels[1][i] = rng.next().value * 2 - 1;
+    }
+    return audioBuffer;
+  }
+
   createLPF() {
     return this.createFilter("LPF", "lowpass");
   }
@@ -499,6 +534,8 @@ export class SPrefabs {
     spot += 0.5;
     this.createSpawnButton("VCO", nextPosition());
     this.createSpawnButton("LFO", nextPosition());
+    spot += 0.5;
+    this.createSpawnButton("Noise", nextPosition());
     spot += 0.5;
     this.createSpawnButton("LPF", nextPosition());
     this.createSpawnButton("HPF", nextPosition());
